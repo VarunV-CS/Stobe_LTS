@@ -1,0 +1,10 @@
+/* .profile {
+  --Grid-columns: 2;
+  --Grid-columnSpacing: 24px;
+  --Grid-rowSpacing: 24px;
+  flex-flow: wrap;
+  min-width: 0px;
+  box-sizing: border-box;
+  display: flex;
+  margin: calc(var(--Grid-rowSpacing) / -2) calc(var(--Grid-columnSpacing) / -2);
+} */

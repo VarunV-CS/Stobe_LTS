@@ -1,0 +1,1000 @@
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardActions from "@mui/material/CardActions";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
+import Divider from "@mui/material/Divider";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import Select from "@mui/material/Select";
+import Grid from "@mui/material/Unstable_Grid2";
+import { TextareaAutosize as BaseTextareaAutosize } from "@mui/base/TextareaAutosize";
+import { Box, styled } from "@mui/system";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import dayjs from "dayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+
+import Dialog from "@mui/material/Dialog";
+
+import {
+  currency,
+  payment,
+  status,
+  Rag,
+  Relocate,
+  workingModel,
+} from "../core/constants";
+
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
+
+const TextareaAutosize = styled(BaseTextareaAutosize)(
+  ({ theme }) => `
+    box-sizing: border-box;
+    width: 569px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: ${theme.palette.mode === "dark" ? grey[300] : grey[900]};
+    background: ${theme.palette.mode === "dark" ? grey[900] : "#fff"};
+    border: 1px solid ${theme.palette.mode === "dark" ? grey[700] : grey[200]};
+    box-shadow: 0 2px 2px ${
+      theme.palette.mode === "dark" ? grey[900] : grey[50]
+    };
+
+    &:focus {
+      border-color: ${blue[400]};
+      box-shadow: 0 0 0 3px ${
+        theme.palette.mode === "dark" ? blue[600] : blue[200]
+      };
+    }
+  `
+);
+
+const blue = {
+  100: "#DAECFF",
+  200: "#b6daff",
+  400: "#3399FF",
+  500: "#007FFF",
+  600: "#0072E5",
+  900: "#003A75",
+};
+
+const grey = {
+  50: "#F3F6F9",
+  100: "#E5EAF2",
+  200: "#DAE2ED",
+  300: "#C7D0DD",
+  400: "#B0B8C4",
+  500: "#9DA8B7",
+  600: "#6B7A90",
+  700: "#434D5B",
+  800: "#303740",
+  900: "#1C2025",
+};
+
+const EditCandidate = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    surName: "", // Corrected from lastName
+    currency: "",
+    currentCTC: "",
+    contactNo: "",
+    expectedCTC: "",
+    alternateContactNo: "",
+    paymentType: "",
+    experience: "",
+    screenedBy: "",
+    noticePeriod: null, // Changed to null for DatePicker
+    email: "",
+    screeningOutcome: "",
+    currentLocation: "",
+    status: "",
+    workingModel: "",
+    interviewer: "",
+    internalInterviewNotes: "",
+    currentRole: "",
+    expectedRole: "",
+    internalRAG: "",
+    relocate: "",
+    clientFeedback: "",
+    resume: [""],
+    clientsInterviewDate: null, // Changed to null for DatePicker
+    lastComms: [],
+    screeningNotes: "",
+  });
+
+  const [initialFormData, setInitialFormData] = useState(null);
+  const [resume, setResume] = useState([]);
+  const [open, setOpen] = React.useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  useEffect(() => {
+    const fetchCandidateDetails = async () => {
+      try {
+        const response = await fetch(
+          `http://167.172.164.218/candidates/getById/${id}`
+        );
+        const data = await response.json();
+
+        // Format dates using dayjs before setting state
+        const formattedData = {
+          ...data.data,
+          noticePeriod: data.data.noticePeriod
+            ? dayjs(data.data.noticePeriod)
+            : null,
+          clientsInterviewDate: data.data.clientsInterviewDate
+            ? dayjs(data.data.clientsInterviewDate)
+            : null,
+        };
+
+        setFormData(formattedData);
+        setInitialFormData(formattedData);
+        setResume(data.data.resume);
+      } catch (error) {
+        console.error("Error fetching candidate details:", error);
+        setSnackbarMessage("Failed to fetch candidate details.");
+        setOpenSnackbar(true);
+      }
+    };
+
+    fetchCandidateDetails();
+  }, [id]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleNoticeDateChange = (date) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      noticePeriod: date,
+    }));
+  };
+
+  const handleclientsInterviewDateChange = (date) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      clientsInterviewDate: date,
+    }));
+  };
+
+  const getChangedFields = () => {
+    const changedFields = {};
+    if (!initialFormData) return changedFields;
+
+    Object.keys(formData).forEach((key) => {
+      if (
+        key === "noticePeriod" ||
+        key === "clientsInterviewDate" // Handle Date objects
+      ) {
+        if (
+          (formData[key] === null && initialFormData[key] !== null) ||
+          (formData[key] !== null && initialFormData[key] === null) ||
+          (formData[key] &&
+            initialFormData[key] &&
+            !formData[key].isSame(initialFormData[key]))
+        ) {
+          changedFields[key] = formData[key] ? formData[key].format("DD-MM-YYYY") : null; // Format date before sending
+        }
+      } else if (JSON.stringify(formData[key]) !== JSON.stringify(initialFormData[key])) {
+        changedFields[key] = formData[key];
+      }
+    });
+
+    return changedFields;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const changedFields = getChangedFields();
+
+    if (Object.keys(changedFields).length === 0) {
+      setSnackbarMessage("No changes to update.");
+      setOpenSnackbar(true);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://167.172.164.218/candidates/update1/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(changedFields),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to update candidate");
+      }
+
+      setSnackbarMessage("Candidate updated successfully!");
+      setOpenSnackbar(true);
+      navigate("/candidates");
+    } catch (error) {
+      console.error("Error updating candidate:", error);
+      setSnackbarMessage(error.message || "An unexpected error occurred.");
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
+
+  const uploadDocumentHandler = () => {
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <form onSubmit={handleSubmit}>
+        <Card
+          sx={{
+            backgroundColor: "transparent",
+            boxShadow: "2px 2px 8px rgba(0, 0, 0, 0.2)",
+          }}
+        >
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <CardHeader title="Edit Candidate" />
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <CardActions>
+                <Button
+                  size="medium"
+                  variant="outlined"
+                  color="warning"
+                  onClick={uploadDocumentHandler}
+                >
+                  Upload documents
+                </Button>
+              </CardActions>
+              <CardActions>
+                <Button size="medium" variant="outlined" type="submit">
+                  Update
+                </Button>
+              </CardActions>
+              <CardActions>
+                <Button
+                  size="medium"
+                  variant="outlined"
+                  color="error"
+                  onClick={() => navigate("/candidates")}
+                >
+                  Cancel
+                </Button>
+              </CardActions>
+            </Box>
+          </Box>
+          <Divider />
+
+          <CardContent>
+            <Grid container spacing={3}>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.name}>name</InputLabel>
+                  <OutlinedInput
+                    label="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel>Currency</InputLabel>
+                  <Select
+                    label="Currency"
+                    name="currency"
+                    value={formData.currency}
+                    onChange={handleChange}
+                  >
+                    {currency.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.surName}>
+                    Last name
+                  </InputLabel>
+                  <OutlinedInput
+                    label="Last name"
+                    name="surName"
+                    value={formData.surName}
+                    onChange={handleChange}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.currentCTC}>
+                    Current CTC
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.currentCTC}
+                    onChange={handleChange}
+                    label="Current CTC"
+                    name="currentCTC"
+                    type="number"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.contactNo}>
+                    Contact number
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.contactNo}
+                    onChange={handleChange}
+                    label="Contact number"
+                    name="contactNo"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.expectedCTC}>
+                    Expected CTC
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.expectedCTC}
+                    onChange={handleChange}
+                    label="Expected CTC"
+                    name="expectedCTC"
+                    type="number"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.alternateContactNo}>
+                    Alternate Contact number
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.alternateContactNo}
+                    onChange={handleChange}
+                    label="Alternate Contact number"
+                    name="alternateContactNo"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.paymentType}>
+                    Payment Model
+                  </InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Payment Model"
+                    name="paymentType"
+                    variant="outlined"
+                    value={formData.paymentType}
+                  >
+                    {payment.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.experience}>
+                    Experience(in Yrs)
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.experience}
+                    onChange={handleChange}
+                    label="Experience(in Yrs)"
+                    name="experience"
+                    type="number"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.screenedBy}>
+                    Screened By
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.screenedBy}
+                    onChange={handleChange}
+                    label="Screened By"
+                    name="screenedBy"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
+                    <DemoContainer components={["DatePicker"]} fullWidth>
+                      <DatePicker
+                        label="Notice Period"
+                        value={formData.noticePeriod}
+                        onChange={handleNoticeDateChange}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            required: true,
+                            InputLabelProps: { shrink: !!formData.noticePeriod },
+                          },
+                        }}
+                      />
+                    </DemoContainer>
+                  </LocalizationProvider>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Screening Notes</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Screening Notes"
+                    name="screeningNotes"
+                    value={formData.screeningNotes} // Added value
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.email}>
+                    Candidate Email address
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.email}
+                    onChange={handleChange}
+                    label="Candidate Email address"
+                    name="email" // Corrected name
+                    type="email"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.screeningOutcome}>
+                    Screening Outcome
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.screeningOutcome}
+                    onChange={handleChange}
+                    label="Screening Outcome"
+                    name="screeningOutcome"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Current Location</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Current Location"
+                    name="currentLocation"
+                    value={formData.currentLocation}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Status"
+                    name="status"
+                    value={formData.status}
+                  >
+                    {status.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Working Model</InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Working Model"
+                    name="workingModel"
+                    value={formData.workingModel}
+                  >
+                    {workingModel.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Interviewer</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Interviewer"
+                    name="interviewer"
+                    value={formData.interviewer}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Internal Interview Notes</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Internal Interview Notes"
+                    name="internalInterviewNotes"
+                    value={formData.internalInterviewNotes}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Current Role</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Current Role"
+                    name="currentRole"
+                    value={formData.currentRole}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Expected Role</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Expected Role"
+                    name="expectedRole"
+                    value={formData.expectedRole}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Internal RAG</InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Internal RAG"
+                    name="internalRAG"
+                    value={formData.internalRAG}
+                  >
+                    {Rag.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Relocate</InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Relocate"
+                    name="relocate"
+                    value={formData.relocate}
+                  >
+                    {Relocate.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
+                    <DemoContainer components={["DatePicker"]} fullWidth>
+                      <DatePicker
+                        label="Clients Interview Date"
+                        value={formData.clientsInterviewDate}
+                        onChange={handleclientsInterviewDateChange}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            InputLabelProps: { shrink: !!formData.clientsInterviewDate },
+                          },
+                        }}
+                      />
+                    </DemoContainer>
+                  </LocalizationProvider>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Client Feedback</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Client Feedback"
+                    name="clientFeedback"
+                    value={formData.clientFeedback}
+                  />
+                </FormControl>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      </form>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={
+            snackbarMessage === "Candidate updated successfully!"
+              ? "success"
+              : "error"
+          }
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </>
+  );
+};
+
+export default EditCandidate;
+<Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.currentCTC}>
+                    Current CTC
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.currentCTC}
+                    onChange={handleChange}
+                    label="Current CTC"
+                    name="currentCTC"
+                    type="number"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.contactNo}>
+                    Contact number
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.contactNo}
+                    onChange={handleChange}
+                    label="Contact number"
+                    name="contactNo"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.expectedCTC}>
+                    Expected CTC
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.expectedCTC}
+                    onChange={handleChange}
+                    label="Expected CTC"
+                    name="expectedCTC"
+                    type="number"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.alternateContactNo}>
+                    Alternate Contact number
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.alternateContactNo}
+                    onChange={handleChange}
+                    label="Alternate Contact number"
+                    name="alternateContactNo"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.paymentType}>
+                    Payment Model
+                  </InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Payment Model"
+                    name="paymentType"
+                    variant="outlined"
+                    value={formData.paymentType}
+                  >
+                    {payment.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel shrink={!!formData.experience}>
+                    Experience(in Yrs)
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.experience}
+                    onChange={handleChange}
+                    label="Experience(in Yrs)"
+                    name="experience"
+                    type="number"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.screenedBy}>
+                    Screened By
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.screenedBy}
+                    onChange={handleChange}
+                    label="Screened By"
+                    name="screenedBy"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
+                    <DemoContainer components={["DatePicker"]} fullWidth>
+                      <DatePicker
+                        label="Notice Period"
+                        value={formData.noticePeriod}
+                        onChange={handleNoticeDateChange}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            required: true,
+                            InputLabelProps: { shrink: !!formData.noticePeriod },
+                          },
+                        }}
+                      />
+                    </DemoContainer>
+                  </LocalizationProvider>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Screening Notes</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Screening Notes"
+                    name="screeningNotes"
+                    value={formData.screeningNotes}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.email}>
+                    Candidate Email address
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.email}
+                    onChange={handleChange}
+                    label="Candidate Email address"
+                    name="email"
+                    type="email"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel shrink={!!formData.screeningOutcome}>
+                    Screening Outcome
+                  </InputLabel>
+                  <OutlinedInput
+                    value={formData.screeningOutcome}
+                    onChange={handleChange}
+                    label="Screening Outcome"
+                    name="screeningOutcome"
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Current Location</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Current Location"
+                    name="currentLocation"
+                    value={formData.currentLocation}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Status"
+                    name="status"
+                    value={formData.status}
+                  >
+                    {status.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Working Model</InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Working Model"
+                    name="workingModel"
+                    value={formData.workingModel}
+                  >
+                    {workingModel.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Interviewer</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Interviewer"
+                    name="interviewer"
+                    value={formData.interviewer}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Internal Interview Notes</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Internal Interview Notes"
+                    name="internalInterviewNotes"
+                    value={formData.internalInterviewNotes}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Current Role</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Current Role"
+                    name="currentRole"
+                    value={formData.currentRole}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Expected Role</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Expected Role"
+                    name="expectedRole"
+                    value={formData.expectedRole}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Internal RAG</InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Internal RAG"
+                    name="internalRAG"
+                    value={formData.internalRAG}
+                  >
+                    {Rag.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Relocate</InputLabel>
+                  <Select
+                    onChange={handleChange}
+                    label="Relocate"
+                    name="relocate"
+                    value={formData.relocate}
+                  >
+                    {Relocate.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth required>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
+                    <DemoContainer components={["DatePicker"]} fullWidth>
+                      <DatePicker
+                        label="Clients Interview Date"
+                        value={formData.clientsInterviewDate}
+                        onChange={handleclientsInterviewDateChange}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            InputLabelProps: {
+                              shrink: !!formData.clientsInterviewDate,
+                            },
+                          },
+                        }}
+                      />
+                    </DemoContainer>
+                  </LocalizationProvider>
+                </FormControl>
+              </Grid>
+              <Grid md={6} xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Client Feedback</InputLabel>
+                  <OutlinedInput
+                    onChange={handleChange}
+                    label="Client Feedback"
+                    name="clientFeedback"
+                    value={formData.clientFeedback}
+                  />
+                </FormControl>
+              </Grid>
