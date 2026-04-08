@@ -6,6 +6,5 @@
 2.Active Roles Distribution (frontend filtering)
 3.Candiates per Role
 ~ Added confirmation Modal for record deletion for all lists
-~ Redesigned the Profile page
 
 -Varun
