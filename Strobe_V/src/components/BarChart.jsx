@@ -3,18 +3,24 @@ import Chart from 'react-apexcharts';
 import { Grid, Card, Typography, Box } from '@mui/material';
 
 const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onViewMore, height = 300 }) => {
+
   const getColorsByLabels = (labels) => {
   const colorMap = {
-    'Amber': '#FF9800',
-    'Green': '#4CAF50',
-    'Shortlisted': '#2196F3',
-    'Rejected': '#F44336',
-    'Unassigned': '#9E9E9E'
+    'Amber': '#feb019',
+    'Green': '#05e395',
+    'Shortlisted': '#038ffb',
+    'Rejected': '#ff455f',
+    'Unassigned': '#775dcf'
   };
-  return labels.map(label => {
+  
+  const predefinedColors = ['#038ffb', '#05e395', '#ff455f', '#775dcf', '#feb019'];
+  
+  const mappedColors = labels.map((label, index) => {
     const key = label.trim();
-    return colorMap[key] || `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`;
+    return colorMap[key] || predefinedColors[index % predefinedColors.length];
   });
+  
+  return mappedColors;
 };
 
 
