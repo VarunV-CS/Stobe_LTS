@@ -57,6 +57,7 @@ const SummaryCard = ({ title, value, icon: Icon, color = "primary" }) => (
     sx={{
       padding: "16px",
       flex: 1,
+      minHeight: '100%',
       display: "flex",
       alignItems: "center",
       gap: 2,
@@ -247,39 +248,38 @@ const allRoles = rolesRes.data || [];
   return (
     <Grid container spacing={3}>
       {/* Summary Cards */}
-      <Grid item xs={12} container spacing={2}>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Active Candidates"
-            value={dashboardData.activeCandidates}
-            icon={UsersIcon}
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Green Candidates"
-            value={dashboardData.greenCandidates}
-            icon={UsersIcon}
-            color="success"
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="Amber Candidates"
-            value={dashboardData.amberCandidates}
-            icon={UsersIcon}
-            color="warning"
-          />
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <SummaryCard
-            title="New Candidates (Last 30 Days)"
-            value={dashboardData.recentCandidates}
-            icon={UsersIcon}
-            color="info"
-          />
-        </Grid>
-      </Grid>
+<Grid item xs={12}>
+  <Box sx={{ 
+    display: 'grid',
+    gridTemplateColumns: { xs: '1fr', md: 'repeat(auto-fit, minmax(280px, 1fr))' },
+    gap: 2,
+    alignItems: 'start'
+  }}>
+    <SummaryCard
+      title="Active Candidates"
+      value={dashboardData.activeCandidates}
+      icon={UsersIcon}
+    />
+    <SummaryCard
+      title="Green Candidates"
+      value={dashboardData.greenCandidates}
+      icon={UsersIcon}
+      color="success"
+    />
+    <SummaryCard
+      title="Amber Candidates"
+      value={dashboardData.amberCandidates}
+      icon={UsersIcon}
+      color="warning"
+    />
+    <SummaryCard
+      title="New Candidates (Last 30 Days)"
+      value={dashboardData.recentCandidates}
+      icon={UsersIcon}
+      color="info"
+    />
+  </Box>
+</Grid>
 
       {/* Bar Graphs */}
       <Grid item xs={12} container spacing={2}>

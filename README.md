@@ -8,5 +8,6 @@
 ~ Added confirmation Modal for record deletion for all lists
 ~ Redesigned the Profile page
 ~ Convert Pie Chart to Bar Graphs(include chart download options and maintain the color palette)
+~ Add CSS Grid on the summary cards container row for intrinsic equal heights.
 
 -Varun
