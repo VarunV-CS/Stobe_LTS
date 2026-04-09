@@ -11,6 +11,9 @@ import UsersIcon from "@mui/icons-material/Group"; // Adjust if you're using cus
 import Chart from "react-apexcharts";
 import { Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import BarChart from "../components/BarChart";
+
+
 const PieChartGridItem = ({ chartSeries, labels, title, onViewMore }) => (
   <Grid item lg={4} md={6} xs={12}>
     <Card sx={{ p: 2, borderRadius: "10px", boxShadow: "2px 2px 8px rgba(0, 0, 0, 0.2)" }}>
@@ -278,48 +281,58 @@ const allRoles = rolesRes.data || [];
         </Grid>
       </Grid>
 
-      {/* Pie Charts */}
+      {/* Bar Graphs */}
       <Grid item xs={12} container spacing={2}>
-  <PieChartGridItem
-    chartSeries={[ dashboardData.amberCandidates, dashboardData.greenCandidates]}
-    labels={["Amber","Green" ]}
-    title="Candidate Status Distribution"
-    onViewMore={() => setSelectedModal('status')}
-  />
-  <PieChartGridItem
-    chartSeries={[dashboardData.shortlistedCandidates, dashboardData.rejectedCandidates]}
+      {/* 1st Pie Chart - Candidate Status Distribution 
+      
+      <PieChartGridItem
+      chartSeries={[ dashboardData.amberCandidates, dashboardData.greenCandidates]}
+      labels={["Amber","Green" ]}
+      title="Candidate Status Distribution"
+      onViewMore={() => setSelectedModal('status')}
+      /> */}
+
+<BarChart
+          data={[dashboardData.amberCandidates, dashboardData.greenCandidates]}
+          labels={["Amber", "Green"]}
+          title="Candidate Status Distribution"
+          onViewMore={() => setSelectedModal('status')}
+      />
+
+  <BarChart
+    data={[dashboardData.shortlistedCandidates, dashboardData.rejectedCandidates]}
     labels={["Shortlisted", "Rejected"]}
     title="Candidate Selection Status"
     onViewMore={() => setSelectedModal('selection')}
   />
-  <PieChartGridItem
-    chartSeries={roleCounts.map((r) => r.count)}
+  <BarChart
+    data={roleCounts.map((r) => r.count)}
     labels={roleCounts.map((r) => r.label)}
     title="Active Roles Distribution"
     onViewMore={() => setSelectedModal('roles')}
   />
-  <PieChartGridItem
-    chartSeries={candidatesByRole.map((r) => r.count)}
+<BarChart
+    data={candidatesByRole.map((r) => r.count)}
     labels={candidatesByRole.map((r) => r.label)}
     title="Candidates per Role"
     onViewMore={() => setSelectedModal('candidatesByRole')}
   />
 
-<PieChartGridItem
-  chartSeries={candidatesByClient.map((r) => r.count)}
+<BarChart
+  data={candidatesByClient.map((r) => r.count)}
   labels={candidatesByClient.map((r) => r.label)}
   title="Candidates by Client"
   onViewMore={() => setSelectedModal('candidatesByClientModal')}
  />
-<PieChartGridItem
-  chartSeries={roleStatusPieData.map((data) => data.greenCount)}
+<BarChart
+  data={roleStatusPieData.map((data) => data.greenCount)}
   labels={roleStatusPieData.map((data) => data.role)}
   title="Role-Based Green Candidates"
   onViewMore={() => setSelectedModal('greenByRole')}
  />
 
-  <PieChartGridItem
-    chartSeries={roleStatusPieData.map((data) => data.amberCount)}
+  <BarChart
+    data={roleStatusPieData.map((data) => data.amberCount)}
     labels={roleStatusPieData.map((data) => data.role)}
     title="Role-Based Amber Candidates"
     onViewMore={() => setSelectedModal('amberByRole')}
