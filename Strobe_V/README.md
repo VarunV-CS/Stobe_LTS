@@ -28,14 +28,17 @@ The frontend is the main user-facing application. It stores the signed-in user i
   - green candidates
   - amber candidates
   - candidates added in the last 30 days
-- Bar charts for:
-  - candidate status distribution
-  - shortlisted vs rejected candidates
-  - role counts
-  - candidates per role
-  - role-based green candidates
-  - role-based amber candidates
+- Enhanced Bar charts (via reusable `BarChart.jsx` component with download options, consistent color palette):
+  - Candidate Status Distribution
+  - Candidate Selection Status
+  - Active Roles Distribution
+  - Candidates per Role
+  - Candidates by Client
+  - Role-Based Green Candidates
+  - Role-Based Amber Candidates
 - Automatic dashboard refresh every 5 minutes
+- CSS Grid layout for summary cards (intrinsic equal heights)
+- `CandidatesDashboardCard.jsx` components for metrics display
 
 ### Candidate management
 
@@ -44,7 +47,7 @@ The frontend is the main user-facing application. It stores the signed-in user i
   - pagination
   - recent candidate count
   - export to Excel with `xlsx`
-  - delete action
+- delete action with `ConfirmDeleteModal.jsx` confirmation
 - Candidate creation form with:
   - personal/contact details
   - notice period
@@ -288,6 +291,13 @@ While documenting the codebase, a few frontend integrations were found that are 
 That means the frontend is designed for a broader backend surface area than the API code currently present here. If those endpoints exist in another service or branch, the UI is already wired for them.
 
 ## Known Implementation Notes
+
+**Recent Frontend Enhancements:**
+
+- New reusable `BarChart.jsx` component used throughout Dashboard
+- Global `ConfirmDeleteModal.jsx` integrated via `DeleteContext` for safe deletions (candidates, clients, roles)
+- Dashboard now fetches/uses new data shapes: `candidatesByClient`, `roleStatusPieData` (green/amber per role)
+- Auto-refresh interval: 5 minutes via `useEffect` + `setInterval`
 
 - `APIS/README.md` already contains backend-focused endpoint documentation.
 - The profile page currently updates local form state only; it does not call the backend update endpoint yet.
