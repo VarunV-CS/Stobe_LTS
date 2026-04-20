@@ -21,11 +21,11 @@ const ApexChart = lazy(() => import("react-apexcharts"));
 
 export const Chart = styled(ApexChart)``;
 
-const PieChart = ({ chartSeries, labels, sx }) => {
+const PieChart = ({ chartSeries, labels, sx, title = "Pie Chart", onViewMore }) => {
   const chartOptions = useChartOptions(labels);
   return (
     <Card sx={sx}>
-      <CardHeader title="Active candidates" />
+<CardHeader title={title} />
       <CardContent>
         <Stack spacing={2}>
           <Chart
@@ -56,6 +56,23 @@ const PieChart = ({ chartSeries, labels, sx }) => {
             })}
           </Stack>
         </Stack>
+        {/* {onViewMore && (
+          <Box sx={{ mt: 2, textAlign: 'right' }}>
+            <Typography
+              variant="body2"
+              component="span"
+              sx={{
+                color: 'primary.main',
+                cursor: 'pointer',
+                fontWeight: 500,
+                '&:hover': { textDecoration: 'underline' }
+              }}
+              onClick={onViewMore}
+            >
+              View more →
+            </Typography>
+          </Box>
+        )} */}
       </CardContent>
     </Card>
   );

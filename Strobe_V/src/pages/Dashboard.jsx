@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Grid,
   Typography,
@@ -9,48 +9,15 @@ import {
 import axios from "axios";
 import UsersIcon from "@mui/icons-material/Group"; // Adjust if you're using custom icons
 import Chart from "react-apexcharts";
-import { Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton } from "@mui/material";
+import ViewMoreModal from "../components/ViewMoreModal";
 import CloseIcon from "@mui/icons-material/Close";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
 import BarChart from "../components/BarChart";
+import PieChart from "../components/PieChart";
+import PieChartGridItem from "../components/PieChartGridItem";
 
 
-const PieChartGridItem = ({ chartSeries, labels, title, onViewMore }) => (
-  <Grid item lg={4} md={6} xs={12}>
-    <Card sx={{ p: 2, borderRadius: "10px", boxShadow: "2px 2px 8px rgba(0, 0, 0, 0.2)" }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        {title}
-      </Typography>
-      <Chart
-        options={{
-          labels,
-          legend: { 
-            show: false 
-          },
-        }}
-        series={chartSeries}
-        type="pie"
-        height={300}
-      />
-      {onViewMore && (
-        <Box sx={{ mt: 2, textAlign: 'right' }}>
-          <Typography 
-            variant="body2" 
-            component="span"
-            sx={{ 
-              color: 'primary.main', 
-              cursor: 'pointer',
-              fontWeight: 500,
-              '&:hover': { textDecoration: 'underline' }
-            }}
-            onClick={onViewMore}
-          >
-            View more →
-          </Typography>
-        </Box>
-      )}
-    </Card>
-  </Grid>
-);
 
 const SummaryCard = ({ title, value, icon: Icon, color = "primary" }) => (
   <Card
@@ -101,7 +68,9 @@ const Dashboard = () => {
   const [candidatesByRole, setCandidatesByRole] = useState([]);
 const [roleStatusPieData, setRoleStatusPieData] = useState([]);
   const [candidatesByClient, setCandidatesByClient] = useState([]);
-  const [selectedModal, setSelectedModal] = useState(null);
+  const [viewMoreOpen, setViewMoreOpen] = useState(false);
+  const [viewMoreData, setViewMoreData] = useState([]);
+  const [viewMoreTitle, setViewMoreTitle] = useState('');
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const fetchDashboardData = useCallback(async () => {
@@ -227,8 +196,8 @@ const allRoles = rolesRes.data || [];
   }, []);
   
   
-        console.log('candidatesByClient:', candidatesByClient);
-        console.log('roleStatusPieData:', roleStatusPieData)
+        // console.log('candidatesByClient:', candidatesByClient);
+        // console.log('roleStatusPieData:', roleStatusPieData)
   useEffect(() => {
     fetchDashboardData();
     const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
@@ -296,108 +265,100 @@ const allRoles = rolesRes.data || [];
           data={[dashboardData.amberCandidates, dashboardData.greenCandidates]}
           labels={["Amber", "Green"]}
           title="Candidate Status Distribution"
-          onViewMore={() => setSelectedModal('status')}
+          onViewMore={() => {
+            setViewMoreData([
+              { label: 'Amber Candidates', count: dashboardData.amberCandidates },
+              { label: 'Green Candidates', count: dashboardData.greenCandidates }
+            ]);
+            setViewMoreTitle('Status Distribution Details');
+            setViewMoreOpen(true);
+          }}
       />
 
   <BarChart
     data={[dashboardData.shortlistedCandidates, dashboardData.rejectedCandidates]}
     labels={["Shortlisted", "Rejected"]}
     title="Candidate Selection Status"
-    onViewMore={() => setSelectedModal('selection')}
+    onViewMore={() => {
+      setViewMoreData([
+        { label: 'Shortlisted', count: dashboardData.shortlistedCandidates },
+        { label: 'Rejected', count: dashboardData.rejectedCandidates }
+      ]);
+      setViewMoreTitle('Selection Status Details');
+      setViewMoreOpen(true);
+    }}
   />
   <BarChart
     data={roleCounts.map((r) => r.count)}
     labels={roleCounts.map((r) => r.label)}
     title="Active Roles Distribution"
-    onViewMore={() => setSelectedModal('roles')}
+    onViewMore={() => {
+      setViewMoreData(roleCounts);
+      setViewMoreTitle('Active Roles Details');
+      setViewMoreOpen(true);
+    }}
   />
 <BarChart
     data={candidatesByRole.map((r) => r.count)}
     labels={candidatesByRole.map((r) => r.label)}
     title="Candidates per Role"
-    onViewMore={() => setSelectedModal('candidatesByRole')}
+    onViewMore={() => {
+      setViewMoreData(candidatesByRole);
+      setViewMoreTitle('Candidates per Role Details');
+      setViewMoreOpen(true);
+    }}
   />
 
 <BarChart
   data={candidatesByClient.map((r) => r.count)}
   labels={candidatesByClient.map((r) => r.label)}
   title="Candidates by Client"
-  onViewMore={() => setSelectedModal('candidatesByClientModal')}
+  onViewMore={() => {
+    setViewMoreData(candidatesByClient);
+    setViewMoreTitle('Candidates by Client Details');
+    setViewMoreOpen(true);
+  }}
  />
 <BarChart
   data={roleStatusPieData.map((data) => data.greenCount)}
   labels={roleStatusPieData.map((data) => data.role)}
   title="Role-Based Green Candidates"
-  onViewMore={() => setSelectedModal('greenByRole')}
+  onViewMore={() => {
+    setViewMoreData(roleStatusPieData.map(data => ({ label: data.role, count: data.greenCount })));
+    setViewMoreTitle('Green Candidates by Role Details');
+    setViewMoreOpen(true);
+  }}
  />
 
-  <BarChart
-    data={roleStatusPieData.map((data) => data.amberCount)}
+  <PieChartGridItem
+    chartSeries={roleStatusPieData.map((data) => data.amberCount)}
     labels={roleStatusPieData.map((data) => data.role)}
     title="Role-Based Amber Candidates"
-    onViewMore={() => setSelectedModal('amberByRole')}
+    onViewMore={() => {
+      setViewMoreData(roleStatusPieData.map(data => ({ label: data.role, count: data.amberCount })));
+      setViewMoreTitle('Amber Candidates by Role Details');
+      setViewMoreOpen(true);
+    }}
   />
   </Grid>
+  
+  <PieChart
+        chartSeries={roleStatusPieData.map((data) => data.redCount)}
+        labels={roleStatusPieData.map((data) => data.role)}
+        title="Role-Based Red Candidates"
+        onViewMore={() => {
+          setViewMoreData(roleStatusPieData.map(data => ({ label: data.role, count: data.redCount })));
+          setViewMoreTitle('Red Candidates by Role Details');
+          setViewMoreOpen(true);
+        }}
+  />
 
-  {/* View More Modals - 1st 3 Charts */}
-  <Modal
-    open={selectedModal !== null}
-    onClose={() => setSelectedModal(null)}
-    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-  >
-    <Box sx={{
-      position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-      width: 600, maxHeight: '80vh', bgcolor: 'background.paper', borderRadius: 2,
-      boxShadow: 24, p: 4, overflowY: 'auto'
-    }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">
-          {selectedModal === 'status' && 'Status Distribution Details'}
-          {selectedModal === 'selection' && 'Selection Status Details'}
-          {selectedModal === 'roles' && 'Active Roles Details'}
-          {selectedModal === 'candidatesByRole' && 'Candidates per Role Details'}
-          {selectedModal === 'greenByRole' && 'Green Candidates by Role Details'}
-          {selectedModal === 'amberByRole' && 'Amber Candidates by Role Details'}
-          {selectedModal === 'candidatesByClientModal' && 'Candidates by Client Details'}
-        </Typography>
-        <IconButton onClick={() => setSelectedModal(null)}><CloseIcon /></IconButton>
-      </Box>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead><TableRow><TableCell><strong>Category</strong></TableCell><TableCell align="right"><strong>Count</strong></TableCell></TableRow></TableHead>
-          <TableBody>
-            {selectedModal === 'status' && (
-              <>
-                <TableRow><TableCell>Amber Candidates</TableCell><TableCell align="right">{dashboardData.amberCandidates}</TableCell></TableRow>
-                <TableRow><TableCell>Green Candidates</TableCell><TableCell align="right">{dashboardData.greenCandidates}</TableCell></TableRow>
-              </>
-            )}
-            {selectedModal === 'selection' && (
-              <>
-                <TableRow><TableCell>Shortlisted</TableCell><TableCell align="right">{dashboardData.shortlistedCandidates}</TableCell></TableRow>
-                <TableRow><TableCell>Rejected</TableCell><TableCell align="right">{dashboardData.rejectedCandidates}</TableCell></TableRow>
-              </>
-            )}
-            {selectedModal === 'roles' && roleCounts.map((row) => (
-              <TableRow key={row.label}><TableCell>{row.label}</TableCell><TableCell align="right">{row.count}</TableCell></TableRow>
-            ))}
-            {selectedModal === 'candidatesByRole' && candidatesByRole.map((row) => (
-              <TableRow key={row.label}><TableCell>{row.label}</TableCell><TableCell align="right">{row.count}</TableCell></TableRow>
-            ))}
-            {selectedModal === 'greenByRole' && roleStatusPieData.map((row) => (
-              <TableRow key={row.role}><TableCell>{row.role}</TableCell><TableCell align="right">{row.greenCount}</TableCell></TableRow>
-            ))}
-            {selectedModal === 'amberByRole' && roleStatusPieData.map((row) => (
-              <TableRow key={row.role}><TableCell>{row.role}</TableCell><TableCell align="right">{row.amberCount}</TableCell></TableRow>
-            ))}
-            {selectedModal === 'candidatesByClientModal' && candidatesByClient.map((row) => (
-              <TableRow key={row.label}><TableCell>{row.label}</TableCell><TableCell align="right">{row.count}</TableCell></TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
-  </Modal>
+  <ViewMoreModal
+    open={viewMoreOpen}
+    title={viewMoreTitle}
+    data={viewMoreData}
+    onClose={() => setViewMoreOpen(false)}
+  />
 
       {error && (
         <Grid item xs={12}>
