@@ -298,8 +298,8 @@ const allRoles = rolesRes.data || [];
       setViewMoreOpen(true);
     }}
   />
-<BarChart
-    data={candidatesByRole.map((r) => r.count)}
+<PieChartGridItem
+    chartSeries={candidatesByRole.map((r) => r.count)}
     labels={candidatesByRole.map((r) => r.label)}
     title="Candidates per Role"
     onViewMore={() => {
@@ -309,8 +309,8 @@ const allRoles = rolesRes.data || [];
     }}
   />
 
-<BarChart
-  data={candidatesByClient.map((r) => r.count)}
+<PieChartGridItem
+  chartSeries={candidatesByClient.map((r) => r.count)}
   labels={candidatesByClient.map((r) => r.label)}
   title="Candidates by Client"
   onViewMore={() => {
@@ -319,8 +319,8 @@ const allRoles = rolesRes.data || [];
     setViewMoreOpen(true);
   }}
  />
-<BarChart
-  data={roleStatusPieData.map((data) => data.greenCount)}
+<PieChartGridItem
+  chartSeries={roleStatusPieData.map((data) => data.greenCount)}
   labels={roleStatusPieData.map((data) => data.role)}
   title="Role-Based Green Candidates"
   onViewMore={() => {
@@ -342,7 +342,7 @@ const allRoles = rolesRes.data || [];
   />
   </Grid>
   
-  <PieChart
+  {/* <PieChart
         chartSeries={roleStatusPieData.map((data) => data.redCount)}
         labels={roleStatusPieData.map((data) => data.role)}
         title="Role-Based Red Candidates"
@@ -351,7 +351,7 @@ const allRoles = rolesRes.data || [];
           setViewMoreTitle('Red Candidates by Role Details');
           setViewMoreOpen(true);
         }}
-  />
+  /> */}
 
   <ViewMoreModal
     open={viewMoreOpen}
