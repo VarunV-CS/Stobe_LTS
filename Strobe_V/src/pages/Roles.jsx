@@ -102,11 +102,22 @@ const Roles = () => {
     setEditingRole((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async () => {
+const handleSave = async () => {
     try {
+      // Extract just the client IDs from the client array
+      const clientIdArray = Array.isArray(editingRole.clientId)
+        ? editingRole.clientId.map(c => typeof c === 'object' ? c._id : c)
+        : [];
+
       const payload = {
-        ...editingRole,
-        clientId: editingRole.clientId // Already array
+        roleName: editingRole.roleName,
+        requiredExperience: editingRole.requiredExperience,
+        location: editingRole.location,
+        techStack: editingRole.techStack,
+        startDate: editingRole.startDate,
+        endDate: editingRole.endDate,
+        status: editingRole.status,
+        clientId: clientIdArray
       };
 
       if (editingRole._id) {
@@ -115,9 +126,19 @@ const Roles = () => {
         await axios.post("http://167.172.164.218/roles/create", payload);
       }
       handleClose();
+      
+      // Fetch and apply transformation (same as initial fetch)
       const res = await axios.get("http://167.172.164.218/roles/get");
       console.log(res.data);
-      setRoles(res.data);
+      const transformedRoles = Array.isArray(res.data)
+        ? res.data.map(role => ({
+            ...role,
+            client: Array.isArray(role.clientId)
+              ? role.clientId.map(c => ({ _id: c._id, name: c.name }))
+              : role.clientId ? [{ _id: role.clientId._id, name: role.clientId.name }] : []
+          }))
+        : [];
+      setRoles(transformedRoles);
     } catch (error) {
       console.error("Error saving role:", error);
     }
