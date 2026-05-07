@@ -66,6 +66,9 @@ const candidatesSchema = new mongoose.Schema(
     clientFeedback: {
       type: String,
     },
+    clientId: {
+      type: Array,
+    },
     lastComms: {
       type: Array,
     },
@@ -86,8 +89,8 @@ const candidatesSchema = new mongoose.Schema(
       default: "",
     },
     expectedRole: {
-      type: String,
-      default: "",
+      type: Array,
+      default: [],
     },
     currency: {
       type: String,

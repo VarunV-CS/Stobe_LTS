@@ -14,7 +14,8 @@ const {
   deleteCandidate,
   updateCandidates1,
   createCandidates1,
-  getCandidates1
+  getCandidates1,
+  getDashboardData
 } = require("../controllers/candidatesController");
 const authMiddleware = require("../middleware/auth");
 
@@ -41,5 +42,6 @@ CandidatesRouter.patch("/updateDoc/:_id", upload, uploadDocument);
 
 
 CandidatesRouter.delete("/deleteById/:id", deleteCandidate );
+CandidatesRouter.get("/dashboard", getDashboardData);
 
 module.exports = CandidatesRouter;

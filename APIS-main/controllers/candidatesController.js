@@ -586,33 +586,47 @@ const uploadDocument = async (req, res) => {
 };
 const updateCandidates1 = async (req, res) => {
   try {
+    const { _id } = req.params;
     const updates = req.body;
+
     console.log("Received update request:", updates);
 
-    const updateQuery = { $set: { ...updates } };
-
-    // 🛠️ Ensure lastComms is properly structured before updating
-    if (updates.lastComms) {
-      console.log("Updating lastComms...");
-
-      const formattedLastComms = updates.lastComms.map((comm) => ({
-        message: typeof comm.message === "string" ? comm.message : "",
-        createdBy: comm.createdBy || "Unknown",
-        timeStamp: comm.timeStamp || new Date().toISOString(),
-      }));
-
-      updateQuery.$set.lastComms = formattedLastComms; // ✅ Replace instead of pushing
+    // Validate ObjectId before proceeding
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      return res.status(400).json({ success: false, message: "Invalid candidate ID" });
     }
 
-    const updatedCandidates = await candidates.updateOne(
-      { _id: req.params._id },
-      updateQuery
-    );
+    // Prepare the update query
+    const updateQuery = { $set: { ...updates } };
+
+    // Remove lastComms from $set if it exists to prevent conflict
+    if (updateQuery.$set.lastComms !== undefined) {
+      delete updateQuery.$set.lastComms;
+    }
+
+    // Handle newLastComm if provided
+    if (updates.newLastComm) {
+      console.log("Updating lastComms...");
+
+      const newLastCommEntry = {
+        message: updates.newLastComm,
+        createdBy: updates.createdBy || "Unknown",
+        timeStamp: new Date().toISOString(),
+      };
+
+      updateQuery.$push = { lastComms: newLastCommEntry };
+    }
+
+    const updatedCandidate = await candidates.findByIdAndUpdate(_id, updateQuery, { new: true });
+
+    if (!updatedCandidate) {
+      return res.status(404).json({ success: false, message: "Candidate not found" });
+    }
 
     res.status(200).json({
       success: true,
       message: "Candidate updated successfully",
-      data: updatedCandidates,
+      data: updatedCandidate,
     });
   } catch (error) {
     console.error("Error updating candidate:", error);
@@ -628,162 +642,112 @@ const createCandidates1 = async (req, res) => {
   try {
     const {
       name,
-
       lastName,
-
       contactNo,
-
       email,
-
       noticePeriod,
-
       currentRole,
-
       currentCTC,
-
       expectedCTC,
-
       relocate,
-
       workingModel,
-
       status,
-
       screeningNotes,
-
       screeningOutcome,
-
       internalInterviewNotes,
-
       internalRAG,
-
       clientFeedback,
-
-      lastComms,
-
+      newLastComm,
       experience,
-
       alternateContactNo,
-
       currentLocation,
-
       screenedBy,
-
       expectedRole,
-
       currency,
-
       paymentType,
-
       interviewer,
-
       clientsInterviewDate,
-
+      clientId,
       createdBy,
       surName,
     } = req.body;
-    if(req.body.lastComms !== '' ){
-      lastComms={
-        lastComms: lastComms,
-        createdBy: createdBy,
-        timeStamp: new Date(),
-      };
-    } 
+    
+    console.log("eeeee", req.body);
 
+    // Initialize lastComms as an empty array
+    let lastComms = [];
+    // If a new communication is provided, add it to the array
+    if (newLastComm && newLastComm.trim() !== "") {
+      lastComms.push({
+        message: newLastComm,
+        createdBy: createdBy || "Unknown",
+        timeStamp: new Date().toISOString(),
+      });
+    }
+
+    // Generate a candidate ID
     const candidateID = Math.floor(Math.random() * 100000);
 
-    const newCandidates = new candidates({
+    // Create a new candidate document
+    const newCandidate = new candidates({
       candidateID,
-
       name,
-
       lastName,
-
       contactNo,
-
       email,
-
       noticePeriod,
-
       currentRole,
-
       currentCTC,
-
       expectedCTC,
-
       relocate,
-
       workingModel,
-
       status,
-
       screeningNotes,
-
       screeningOutcome,
-
       internalInterviewNotes,
-
       internalRAG,
-
+      clientId,
       clientFeedback,
-
-      lastComms : lastComms ,
-
+      lastComms, // use the created lastComms array
       experience,
-
       alternateContactNo,
-
       currentLocation,
-
       screenedBy,
-
       expectedRole,
-
       currency,
-
       paymentType,
-
       interviewer,
-
       clientsInterviewDate,
-
       createdBy,
       surName,
     });
 
-       const savedCandidates = await newCandidates.save();
-    if (req.files) {
-      const files = req.files; // Access the uploaded files from req.files
+    const savedCandidate = await newCandidate.save();
 
+    if (req.files) {
+      const files = req.files; // Access the uploaded files
       console.log("##############", files);
 
-      const driveResponses = await uploadFileToS3(files, savedCandidates._id);
+      const driveResponses = await uploadFileToS3(files, savedCandidate._id);
 
       const uploadedFileURLs = driveResponses.map((response) => response.viewLink);
 
       console.log("************", driveResponses);
 
-      savedCandidates.resume = uploadedFileURLs; 
-
-      await savedCandidates.save();
+      savedCandidate.resume = uploadedFileURLs;
+      await savedCandidate.save();
     }
-    await savedCandidates.save();
 
     res.status(201).json({
       success: true,
-
       message: "Candidates created successfully",
-
-      data: savedCandidates,
+      data: savedCandidate,
     });
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
-
       message: "Failed to create Candidates",
-
       error: error.message,
     });
   }
@@ -792,35 +756,7 @@ const createCandidates1 = async (req, res) => {
 const getCandidates1 = async (req, res) => {
   try {
     const CandidatesData = await candidates.find();
-    // const Candidates = CandidatesData.map((item) => ({
-    //   FirstName: item.name,
-    //   LastName: item.surName,
-    //   ContactNumber: item.contactNo,
-    //   AlternateContactNumber: item.alternateContactNo,
-    //   Experience: item.experience,
-    //   NoticePeriod: item.noticePeriod,
-    //   CandidateEmailAddress: item.email,
-    //   CurrentLocation: item.currentLocation,
-    //   ScreenedBy: item.screenedBy,
-    //   WorkingModel: item.workingModel,
-    //   CurrentRole: item.currentRole,
-    //   ExpectedRole: item.expectedRole,
-    //   WillingToRelocate: item.relocate,
-    //   Currency: item.currency,
-    //   CurrentCTC: item.currentCTC,
-    //   ExpectedCTC: item.expectedCTC,
-    //   PaymentModel: item.paymentType,
-    //   Interviewer: item.interviewer,
-    //   Status: item.status,
-    //   ScreeningNotes: item.screeningNotes,
-    //   ScreeningOutcome: item.screeningOutcome,
-    //   InternalInterviewNotes: item.internalInterviewNotes,
-    //   InternalRAG: item.internalRAG,
-    //   ClientsInterviewDate: item.clientsInterviewDate,
-    //   ClientsFeedback: item.clientFeedback,
-    //   LastComms: item.lastComms,
-    // }));
-
+ 
     res.status(200).json({
       success: true,
       message: "Candidates retrieved successfully",
@@ -835,6 +771,29 @@ const getCandidates1 = async (req, res) => {
     });
   }
 };
+const getDashboardData = async (req, res) => {
+  try {
+    // Active candidates are those with internalRAG "Green" or "Amber"
+    const activeCandidates = await candidates.countDocuments({ internalRAG: { $in: ["Green", "Amber"] } });
+    const greenCandidates = await candidates.countDocuments({ internalRAG: "Green" });
+    const amberCandidates = await candidates.countDocuments({ internalRAG: "Amber" });
+    // Additional counts for the second pie chart:
+    const shortlistedCandidates = await candidates.countDocuments({ status: "Shortlisted" });
+    const rejectedCandidates = await candidates.countDocuments({ status: "Rejected" });
+
+    res.status(200).json({
+      success: true,
+      data: { activeCandidates, greenCandidates, amberCandidates, shortlistedCandidates, rejectedCandidates },
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 
 const deleteCandidate= async (req, res) => {
   const { id } = req.params;
@@ -868,5 +827,6 @@ module.exports = {
   deleteCandidate,
   updateCandidates1,
   createCandidates1,
-  getCandidates1
+  getCandidates1,
+  getDashboardData
 };

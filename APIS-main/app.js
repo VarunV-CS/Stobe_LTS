@@ -10,6 +10,9 @@ const userRouter = require("./routes/userRoutes");
 const CandidatesRouter = require("./routes/candidatesRoutes");
 const ActivityRouter = require("./routes/activityRoutes");
 const EmployeeRouter = require("./routes/EmployeeRoutes");
+const RolesRouter = require("./routes/rolesRoutes");
+const ClientRouter = require("./routes/clientRoutes");
+const ResumeRouter = require("./routes/resumeRoutes");
 const candidates = require("./models/candidates");
 const nodemailer = require("nodemailer");
 const cron = require("node-cron");
@@ -30,6 +33,10 @@ app.use("/users", userRouter);
 app.use("/candidates", CandidatesRouter);
 app.use("/activity", ActivityRouter);
 app.use("/employee", EmployeeRouter);
+app.use("/roles", RolesRouter);
+app.use("/client", ClientRouter);
+app.use("/resume", ResumeRouter);
+
 
 const db_url =
   process.env.NODE_ENV === "production" ? Productiondb_url : Developmentdb_url;
