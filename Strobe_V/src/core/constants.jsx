@@ -5,6 +5,8 @@ import { User as UserIcon } from "@phosphor-icons/react/dist/ssr/User";
 import { Users as UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
 import { XSquare } from "@phosphor-icons/react/dist/ssr/XSquare";
 import { FileText  } from "@phosphor-icons/react/dist/ssr/FileText";
+import { UserFocus as UserFocusIcon } from "@phosphor-icons/react/dist/ssr/UserFocus";
+import { ArrowSquareUpRight as ArrowSquareUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight";
 
 export const BASE_URL = 'http://167.172.164.218/'
 
@@ -16,7 +18,10 @@ export const navIcons = {
   user: UserIcon,
   users: UsersIcon,
   "FileText": FileText,
+  "arrow-square-up-right": ArrowSquareUpRightIcon,
+  "user-focus": UserFocusIcon,
 };
+
 
 export const navItems = [
   {
@@ -41,7 +46,7 @@ export const navItems = [
     key: "ClientRoles",
     title: "Client And Roles",
     href: "/ClientRoles",
-    icon: "FileText",
+    icon: "user-focus",
   },
   {
     key: "Template",
@@ -49,7 +54,15 @@ export const navItems = [
     href: "/Template",
     icon: "FileText",
   },
+  {
+    key: "ProfileBuilder",
+    title: "Profile Builder",
+    href: "/resume/",
+    icon: "arrow-square-up-right",
+    external: true,
+  },
 ];
+
 
 export const Rag = [
   { value: "Amber", label: "Amber" },

@@ -95,9 +95,14 @@ function NavItem({ disabled, external, href, icon, matcher, pathname, title }) {
   const Icon = icon ? navIcons[icon] : null;
 
   const changeNavigation = () => {
+    if (external) {
+      window.open(href, "_blank", "noopener,noreferrer");
+      return;
+    }
     console.log("navigate to ", href);
     navigate(href);
   };
+
 
   return (
     <li>
