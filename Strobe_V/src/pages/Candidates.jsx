@@ -89,17 +89,32 @@ const Candidates = () => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return data || [];
 
-    return (data || []).filter(
-      (candidate) =>
-        candidate.name?.toLowerCase().trim() === query ||
-        candidate.surName?.toLowerCase().trim() === query ||
-        `${candidate.name} ${candidate.surName}`.toLowerCase().trim() === query ||
-        candidate.email?.toLowerCase().trim() === query ||
-        candidate.currentRole?.toLowerCase().trim() === query ||
-        candidate.status?.toLowerCase().trim() === query ||
-        candidate.internalRAG?.toLowerCase().trim() === query ||
-        candidate.expectedRole?.toLowerCase().trim() === query
-    );
+      return (data || []).filter((candidate) => {
+        const normalize = (v) => {
+          if (v === null || v === undefined) return "";
+          return String(v).toLowerCase().trim();
+        };
+
+        const name = normalize(candidate.name);
+        const surName = normalize(candidate.surName);
+        const fullName = normalize(`${candidate.name ?? ""} ${candidate.surName ?? ""}`);
+        const email = normalize(candidate.email);
+        const currentRole = normalize(candidate.currentRole);
+        const status = normalize(candidate.status);
+        const internalRAG = normalize(candidate.internalRAG);
+        const expectedRole = normalize(candidate.expectedRole);
+
+        return (
+          name === query ||
+          surName === query ||
+          fullName === query ||
+          email === query ||
+          currentRole === query ||
+          status === query ||
+          internalRAG === query ||
+          expectedRole === query
+        );
+      });
   }, [data, searchQuery]);
 
   const handlePageChange = (event, newPage) => {
@@ -147,7 +162,7 @@ debugger;
         "surName",
         "candidateID",
         "clientFeedback",
-        ,"clientsInterviewDate",
+        "clientsInterviewDate",
         "contactNo",
         "createdAt",
         "createdBy",
