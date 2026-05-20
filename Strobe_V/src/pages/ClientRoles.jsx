@@ -1,15 +1,41 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Tabs, Tab, Box, Paper, CircularProgress } from "@mui/material";
 import Clients from "./Clients";
 import Roles from "./Roles";
 
+const TAB_HASH = {
+  clients: "#clients",
+  roles: "#roles",
+};
+
+const getTabFromHash = (hash) => {
+  if (hash === TAB_HASH.roles) return 1;
+  return 0;
+};
+
 const ClientRoles = () => {
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(() => getTabFromHash(window.location.hash));
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const syncTabWithHash = () => {
+      setActiveTab(getTabFromHash(window.location.hash));
+    };
+
+    window.addEventListener("hashchange", syncTabWithHash);
+    return () => {
+      window.removeEventListener("hashchange", syncTabWithHash);
+    };
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setLoading(true);
     setActiveTab(newValue);
+    window.history.replaceState(
+      null,
+      "",
+      newValue === 1 ? TAB_HASH.roles : TAB_HASH.clients
+    );
     
     // Reset loading after a short delay
     setTimeout(() => {
