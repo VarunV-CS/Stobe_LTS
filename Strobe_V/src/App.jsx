@@ -1,7 +1,7 @@
 import "./App.css";
 import MainLayout from "./layouts/MainLayout";
-import { Routes, Route } from "react-router";
-import { lazy, Suspense } from "react";
+import { Routes, Route, matchPath, useLocation } from "react-router";
+import { lazy, Suspense, useEffect } from "react";
 
 import Login from "./pages/login";
 import { RootLayout } from "./layouts/RootLayout";
@@ -27,11 +27,40 @@ const routes = [
   { path: "/candidates/:id", element: <EditCandidate /> },
   { path: "/ClientRoles", element: <ClientRoles /> },
   { path: "/Template", element: <Template /> },
-  
-
+  { path: "/roles", element: <Roles /> },
+  { path: "/roles/create", element: <CreateRoles /> },
+  { path: "/roles/:id", element: <EditRoles /> },
 ];
 
+const pageTitles = [
+  { path: "/", title: "Login" },
+  { path: "/dashboard", title: "Dashboard" },
+  { path: "/candidates", title: "Candidates" },
+  { path: "/candidates/create", title: "Create Candidate" },
+  { path: "/candidates/:id", title: "Edit Candidate" },
+  { path: "/profile", title: "Profile" },
+  { path: "/ClientRoles", title: "Client Roles" },
+  { path: "/Template", title: "Template" },
+  { path: "/roles", title: "Roles" },
+  { path: "/roles/create", title: "Create Role" },
+  { path: "/roles/:id", title: "Edit Role" },
+];
+
+function useDynamicPageTitle() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const activePage = pageTitles.find((page) =>
+      matchPath({ path: page.path, end: true }, location.pathname)
+    );
+    const baseTitle = "Strobe";
+    document.title = activePage ? `${activePage.title} | ${baseTitle}` : baseTitle;
+  }, [location.pathname]);
+}
+
 function App() {
+  useDynamicPageTitle();
+
   return (
     <>
       <MainLayout>
