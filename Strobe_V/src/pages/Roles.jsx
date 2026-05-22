@@ -33,11 +33,13 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import useDebounce from "../core/useDebounce";
 
 const Roles = () => {
   const [clients, setClients] = useState([]);
   const [roles, setRoles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 350);
   const [open, setOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [page, setPage] = useState(0);
@@ -171,13 +173,13 @@ const handleSave = async () => {
   };
 
   const filteredRoles = roles.filter((role) =>
-    role.roleName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    role.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    role.requiredExperience?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    role.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    role.techStack?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    role.status?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    role.client?.some(c => c.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    role.roleName?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+    role.description?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+    role.requiredExperience?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+    role.location?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+    role.techStack?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+    role.status?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+    role.client?.some(c => c.name?.toLowerCase().includes(debouncedQuery.toLowerCase()))
   );
 
   const paginatedRoles = filteredRoles.slice(

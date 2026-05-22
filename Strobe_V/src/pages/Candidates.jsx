@@ -14,6 +14,8 @@ import {
   Grid,
   Alert,
 } from "@mui/material";
+import useDebounce from "../core/useDebounce";
+
 
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import {
@@ -85,8 +87,11 @@ const Candidates = () => {
     getCandidates();
   }, []);
 
+  const debouncedSearchQuery = useDebounce(searchQuery, 350);
+
+
   const filteredData = React.useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+    const query = debouncedSearchQuery.toLowerCase().trim();
     if (!query) return data || [];
 
       return (data || []).filter((candidate) => {
@@ -115,7 +120,7 @@ const Candidates = () => {
           expectedRole === query
         );
       });
-  }, [data, searchQuery]);
+  }, [data, debouncedSearchQuery]);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -154,8 +159,7 @@ const Candidates = () => {
         alert("No data to export.");
         return; // Exit if there's absolutely no data
       }
-console.log("232323223232",exportData)
-debugger;
+
       // Define headers
       const headers = [
         "name",

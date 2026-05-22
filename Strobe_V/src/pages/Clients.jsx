@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import useDebounce from "../core/useDebounce";
 import {
   Table,
   TableBody,
@@ -9,7 +10,6 @@ import {
   TableRow,
   Paper,
   TextField,
-  IconButton,
   Button,
   Dialog,
   DialogActions,
@@ -24,6 +24,7 @@ import DeleteActionButton from "../components/DeleteActionButton";
 const Clients = () => {
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 350);
   const [open, setOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
 
@@ -88,9 +89,13 @@ const Clients = () => {
   };
 
   const filteredClients = clients.filter(
-    (client) =>
-      client.name.toLowerCase().includes(search.toLowerCase()) ||
-      client.location.toLowerCase().includes(search.toLowerCase())
+    (client) => {
+      const q = debouncedSearch.toLowerCase();
+      return (
+        client.name.toLowerCase().includes(q) ||
+        client.location.toLowerCase().includes(q)
+      );
+    }
   );
 
   return (
