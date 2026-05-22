@@ -1,6 +1,9 @@
 import { Add } from "@mui/icons-material";
 import EditActionButton from "../components/EditActionButton";
 import DeleteActionButton from "../components/DeleteActionButton";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import RoleCandidatesModal from "../components/RoleCandidatesModal";
+
 import {
   Alert,
   Box,
@@ -17,6 +20,7 @@ import {
   Divider,
   FormControl,
   Grid,
+  IconButton,
   InputLabel,
   MenuItem,
   OutlinedInput,
@@ -46,6 +50,12 @@ const Roles = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [roleCandidatesOpen, setRoleCandidatesOpen] = useState(false);
+  const [selectedRoleName, setSelectedRoleName] = useState("");
+  const [roleCandidates, setRoleCandidates] = useState([]);
+  const [roleCandidatesLoading, setRoleCandidatesLoading] = useState(false);
+  const [roleCandidatesError, setRoleCandidatesError] = useState(null);
 
   useEffect(() => {
     axios.get("http://167.172.164.218/client/get")
@@ -97,6 +107,45 @@ const Roles = () => {
   const handleClose = () => {
     setOpen(false);
     setEditingRole(null);
+  };
+
+  const handleOpenRoleCandidates = async (roleName) => {
+    setSelectedRoleName(roleName || "");
+    setRoleCandidatesOpen(true);
+    setRoleCandidatesLoading(true);
+    setRoleCandidatesError(null);
+
+    try {
+      const response = await axios.get("http://167.172.164.218/candidates/get1");
+      const allCandidates = Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+
+      const filtered = allCandidates.filter(
+        (c) => String(c.currentRole || "").trim() === String(roleName || "").trim()
+      );
+
+      setRoleCandidates(
+        filtered.map((c) => ({
+          _id: c._id,
+          candidateID: c.candidateID,
+          name: `${c.name || ""} ${c.surName || ""}`.trim() || c.name,
+          email: c.email,
+          currentRole: c.currentRole,
+          status: c.status,
+          internalRAG: c.internalRAG,
+          createdAt: c.createdAt,
+        }))
+      );
+    } catch (err) {
+      console.error("Error fetching candidates for role:", err);
+      setRoleCandidates([]);
+      setRoleCandidatesError("Failed to load candidates.");
+    } finally {
+      setRoleCandidatesLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -279,7 +328,22 @@ const handleSave = async () => {
                           <TableCell>
                             <Stack direction="row" spacing={1}>
                               <EditActionButton onClick={() => handleOpen(role)} />
-                              <DeleteActionButton itemId={role._id} itemName={role.roleName} onConfirmFn={() => handleDeleteConfirm(role._id)} />
+                              <IconButton
+                                size="small"
+                                onClick={() => handleOpenRoleCandidates(role.roleName)}
+                                aria-label={`View candidates for ${role.roleName}`}
+                                sx={{
+                                  borderRadius: 1,
+                                  border: '1px solid rgba(0,0,0,0.12)',
+                                }}
+                              >
+                                <VisibilityIcon fontSize="small" />
+                              </IconButton>
+                              <DeleteActionButton
+                                itemId={role._id}
+                                itemName={role.roleName}
+                                onConfirmFn={() => handleDeleteConfirm(role._id)}
+                              />
                             </Stack>
                           </TableCell>
                         </TableRow>
@@ -431,6 +495,15 @@ const handleSave = async () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <RoleCandidatesModal
+        open={roleCandidatesOpen}
+        onClose={() => setRoleCandidatesOpen(false)}
+        title={`Candidates with role: ${selectedRoleName}`}
+        candidates={roleCandidates}
+        loading={roleCandidatesLoading}
+      />
+
     </Box>
   );
 };
