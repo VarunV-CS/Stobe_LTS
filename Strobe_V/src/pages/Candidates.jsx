@@ -1,7 +1,7 @@
 import React from "react";
 import * as XLSX from "xlsx";
 
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { Box, styled } from "@mui/system";
 
 import {
@@ -43,6 +43,7 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 const Candidates = () => {
+  const location = useLocation();
   const { currentUser } = React.useContext(AuthContext);
   const navigate = useNavigate();
   const [data, setData] = React.useState([]);
@@ -86,6 +87,13 @@ const Candidates = () => {
   React.useEffect(() => {
     getCandidates();
   }, []);
+
+  React.useEffect(() => {
+    const incomingSearch = location.state?.search;
+    if (typeof incomingSearch === "string" && incomingSearch.trim().length > 0) {
+      setSearchQuery(incomingSearch);
+    }
+  }, [location.state]);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 350);
 

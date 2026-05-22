@@ -2,10 +2,10 @@ import React from 'react';
 import Chart from 'react-apexcharts';
 import { Grid, Card, Typography, Box } from '@mui/material';
 
-const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onViewMore, height = 300 }) => {
+const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onViewMore, onBarClick, height = 300 }) => {
 
   const getColorsByLabels = (labels) => {
-  const colorMap = {
+    const colorMap = {
     'Amber': '#feb019',
     'Green': '#05e395',
     'Shortlisted': '#038ffb',
@@ -35,6 +35,15 @@ const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onView
           svg: { filename: `${title || 'chart'}` },
           csv: { filename: `${title || 'chart'}` }
         }
+      },
+      events: {
+        dataPointSelection: (event, chartContext, config) => {
+          if (!onBarClick) return;
+          const dataPointIndex = config?.dataPointIndex;
+          if (typeof dataPointIndex !== 'number') return;
+          const selectedLabel = labels[dataPointIndex];
+          if (selectedLabel) onBarClick(selectedLabel);
+        },
       },
     },
     colors: getColorsByLabels(labels),
@@ -80,7 +89,7 @@ const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onView
     },
     grid: {
       borderColor: '#eee'
-    }
+    },
   };
 
   const series = [{

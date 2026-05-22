@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router";
 import {
   Grid,
   Typography,
@@ -55,6 +56,7 @@ const SummaryCard = ({ title, value, icon: Icon, color = "primary" }) => (
 );
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     activeCandidates: 0,
     greenCandidates: 0,
@@ -265,6 +267,9 @@ const allRoles = rolesRes.data || [];
           data={[dashboardData.amberCandidates, dashboardData.greenCandidates]}
           labels={["Amber", "Green"]}
           title="Candidate Status Distribution"
+          onBarClick={(label) => {
+            navigate("/candidates", { state: { search: label } });
+          }}
           onViewMore={() => {
             setViewMoreData([
               { label: 'Amber Candidates', count: dashboardData.amberCandidates },
@@ -279,6 +284,9 @@ const allRoles = rolesRes.data || [];
     data={[dashboardData.shortlistedCandidates, dashboardData.rejectedCandidates]}
     labels={["Shortlisted", "Rejected"]}
     title="Candidate Selection Status"
+    onBarClick={(label) => {
+      navigate("/candidates", { state: { search: label } });
+    }}
     onViewMore={() => {
       setViewMoreData([
         { label: 'Shortlisted', count: dashboardData.shortlistedCandidates },
