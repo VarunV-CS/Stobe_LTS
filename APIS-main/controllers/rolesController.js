@@ -61,7 +61,7 @@ exports.getRolesById = async (req, res) => {
 exports.updateRoles = async (req, res) => {
   try {
     const { _id } = req.params;
-    const { roleName, requiredExperience, clientId, location, techStack } = req.body;
+    const { roleName, requiredExperience, clientId, location, techStack,  startDate, endDate, status } = req.body;
 
     if (!roleName || !requiredExperience || !Array.isArray(clientId) || clientId.length === 0 || !location || !techStack) {
       return res.status(400).json({ message: "All fields are required, including at least one client." });
@@ -69,10 +69,10 @@ exports.updateRoles = async (req, res) => {
 
     const updatedRole = await Role.findByIdAndUpdate(
       _id,
-      { roleName, requiredExperience, clientId, location, techStack },
+      { roleName, requiredExperience, clientId, location, techStack, startDate, endDate, status },
       { new: true, runValidators: true }
     );
-
+    console.log("Updated Role:", updatedRole);
     if (!updatedRole) {
       return res.status(404).json({ message: "Role not found" });
     }
