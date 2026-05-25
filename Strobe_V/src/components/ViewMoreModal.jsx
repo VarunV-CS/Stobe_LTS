@@ -13,6 +13,7 @@ import {
   IconButton,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import ViewMoreSkeleton from './ViewMoreSkeleton';
 
 const ViewMoreModal = ({ open, onClose, title, data = [], loading = false }) => {
   return (
@@ -41,8 +42,9 @@ const ViewMoreModal = ({ open, onClose, title, data = [], loading = false }) => 
           </IconButton>
         </Box>
         {loading ? (
-          <Typography>Loading...</Typography>
+          <ViewMoreSkeleton rows={5} />
         ) : (
+
           <TableContainer component={Paper}>
             <Table>
               <TableHead>

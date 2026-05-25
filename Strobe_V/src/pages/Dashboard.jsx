@@ -7,6 +7,7 @@ import {
   Card,
   Box,
 } from "@mui/material";
+import DashboardSkeleton from "../components/DashboardSkeleton";
 import axios from "axios";
 import UsersIcon from "@mui/icons-material/Group"; // Adjust if you're using custom icons
 import Chart from "react-apexcharts";
@@ -207,13 +208,7 @@ const allRoles = rolesRes.data || [];
   }, [fetchDashboardData]);
 
   if (loading) {
-    return (
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Typography>Loading dashboard data...</Typography>
-        </Grid>
-      </Grid>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (

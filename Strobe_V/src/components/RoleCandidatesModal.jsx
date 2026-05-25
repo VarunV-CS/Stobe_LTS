@@ -12,6 +12,8 @@ import {
   Paper,
   IconButton,
 } from "@mui/material";
+
+import RoleCandidatesSkeleton from "./RoleCandidatesSkeleton";
 import CloseIcon from "@mui/icons-material/Close";
 
 const RoleCandidatesModal = ({
@@ -57,8 +59,9 @@ const RoleCandidatesModal = ({
         </Box>
 
         {loading ? (
-          <Typography>Loading...</Typography>
+          <RoleCandidatesSkeleton rows={6} />
         ) : (
+
           <TableContainer component={Paper}>
             <Table>
               <TableHead>

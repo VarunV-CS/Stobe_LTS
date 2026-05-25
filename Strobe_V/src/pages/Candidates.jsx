@@ -29,6 +29,7 @@ import CustomersTable from "../components/CustomersTable";
 import { BASE_URL } from "../core/constants";
 import { AuthContext } from "../core/AuthContext";
 import CandidatesDashboardCard from "../components/CandidatesDashboardCard";
+import CandidatesTableSkeleton from "../components/CandidatesTableSkeleton";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -48,6 +49,7 @@ const Candidates = () => {
   const navigate = useNavigate();
   const [data, setData] = React.useState([]);
   const [resume, setResume] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [searchQuery, setSearchQuery] = React.useState(""); // State for search
@@ -57,6 +59,7 @@ const Candidates = () => {
 
   const getCandidates = async () => {
     try {
+      setLoading(true);
       const response = await fetch(`http://167.172.164.218/candidates/get1`);
       const result = await response.json();
       const sortedData = result.data.sort(
@@ -76,6 +79,8 @@ const Candidates = () => {
     } catch (error) {
       console.error("Error fetching candidates:", error);
       setData([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -355,8 +360,9 @@ const Candidates = () => {
     <div>
       <Stack spacing={3}>
        
-        <Stack direction="row" spacing={3}>
+      <Stack direction="row" spacing={3}>
           <Stack spacing={1} sx={{ flex: "1 1 auto" }}>
+
             <Typography variant="h4">Candidates</Typography>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
               <Button
@@ -389,14 +395,18 @@ const Candidates = () => {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
-        <CustomersTable
-          count={filteredData.length}
-          rows={paginatedCustomers}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleRowsPerPageChange}
-        />
+        {loading ? (
+          <CandidatesTableSkeleton rowsPerPage={rowsPerPage} />
+        ) : (
+          <CustomersTable
+            count={filteredData.length}
+            rows={paginatedCustomers}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerPageChange}
+          />
+        )}
       </Stack>
       <Box sx={{ padding: "20px" }}>
         <Dialog
