@@ -1,4 +1,5 @@
-import React from "react";
+import PropTypes from "prop-types";
+
 import {
   Box,
   Card,
@@ -107,5 +108,11 @@ const CandidatesTableSkeleton = ({ rowsPerPage = 25, rows = 8 }) => {
   );
 };
 
+CandidatesTableSkeleton.propTypes = {
+  rowsPerPage: PropTypes.number,
+  rows: PropTypes.number,
+};
+
 export default CandidatesTableSkeleton;
+
 

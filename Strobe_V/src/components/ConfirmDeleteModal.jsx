@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+
 import {
   Dialog,
   DialogActions,
@@ -24,9 +25,18 @@ const ConfirmDeleteModal = () => {
       <DialogTitle>Confirm Delete</DialogTitle>
       <DialogContent>
         <Typography sx={{ mb: 2 }}>
-          Are you sure you want to delete "{itemName}"? This action cannot be undone.
+          Are you sure you want to delete {itemName}? This action cannot be undone.
+
+
+
+
+
+
+
+
         </Typography>
         <Typography variant="body2" color="error.main">
+
           Type <strong>{itemName}</strong> to confirm:
         </Typography>
         <TextField

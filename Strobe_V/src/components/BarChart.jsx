@@ -1,5 +1,6 @@
-import React from 'react';
 import Chart from 'react-apexcharts';
+import PropTypes from 'prop-types';
+
 import { Grid, Card, Typography, Box } from '@mui/material';
 
 const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onViewMore, onBarClick, height = 300 }) => {
@@ -125,6 +126,15 @@ const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onView
       </Card>
     </Grid>
   );
+};
+
+BarChartComponent.propTypes = {
+  data: PropTypes.arrayOf(PropTypes.number),
+  labels: PropTypes.arrayOf(PropTypes.string),
+  title: PropTypes.string,
+  onViewMore: PropTypes.func,
+  onBarClick: PropTypes.func,
+  height: PropTypes.number,
 };
 
 export default BarChartComponent;

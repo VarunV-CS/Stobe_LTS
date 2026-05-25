@@ -1,4 +1,4 @@
-import React from 'react'
+import PropTypes from 'prop-types';
 import Card from '@mui/material/Card';
 import InputAdornment from '@mui/material/InputAdornment';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -8,7 +8,7 @@ import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 
 const CustomersFilters = ({ searchQuery, setSearchQuery }) => {
   return (
-    <Card sx={{ p: 2, boxShadow: "2px 2px 8px rgba(0, 0, 0, 0.2)" }}>
+    <Card sx={{ p: 2, boxShadow: '2px 2px 8px rgba(0, 0, 0, 0.2)' }}>
       <OutlinedInput
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
@@ -34,7 +34,13 @@ const CustomersFilters = ({ searchQuery, setSearchQuery }) => {
         }
       />
     </Card>
-  )
-}
+  );
+};
 
-export default CustomersFilters
+CustomersFilters.propTypes = {
+  searchQuery: PropTypes.string.isRequired,
+  setSearchQuery: PropTypes.func.isRequired,
+};
+
+export default CustomersFilters;
+

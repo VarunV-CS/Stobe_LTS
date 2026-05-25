@@ -1,8 +1,10 @@
-import React from 'react';
+
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { Users as UsersIcon } from '@phosphor-icons/react/dist/ssr/Users';
+import PropTypes from 'prop-types';
+
 
 const CandidatesDashboardCard = ({ count }) => {
   return (
@@ -40,4 +42,11 @@ const CandidatesDashboardCard = ({ count }) => {
   );
 };
 
-export default CandidatesDashboardCard; 
+CandidatesDashboardCard.propTypes = {
+  count: PropTypes.number.isRequired,
+};
+
+
+export default CandidatesDashboardCard;
+
+

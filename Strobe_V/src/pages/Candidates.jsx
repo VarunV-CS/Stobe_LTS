@@ -259,7 +259,11 @@ const Candidates = () => {
 
       // Validate required fields
       const requiredFields = ['name', 'surName', 'contactNo', 'email', 'currentRole', 'expectedRole'];
-      const missingFields = requiredFields.filter(field => !jsonData[0]?.hasOwnProperty(field));
+      const missingFields = requiredFields.filter((field) => {
+        const row0 = jsonData[0] ?? {};
+        return !Object.prototype.hasOwnProperty.call(row0, field);
+      });
+
       
       if (missingFields.length > 0) {
         setImportError(`Missing required fields: ${missingFields.join(', ')}`);

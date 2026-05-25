@@ -1,8 +1,10 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { Box, Card, Grid, Skeleton } from "@mui/material";
 import { grey } from "@mui/material/colors";
 
 const SkeletonCard = ({ height = 96 }) => (
+
   <Card
     sx={{
       padding: "16px",
@@ -35,8 +37,13 @@ const SkeletonCard = ({ height = 96 }) => (
   </Card>
 );
 
+SkeletonCard.propTypes = {
+  height: PropTypes.number,
+};
+
 const DashboardSkeleton = () => {
   return (
+
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <Box

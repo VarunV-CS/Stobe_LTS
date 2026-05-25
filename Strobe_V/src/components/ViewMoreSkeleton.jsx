@@ -1,7 +1,10 @@
-import React from "react";
-import { Box, Paper, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import PropTypes from "prop-types";
+import { Paper, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+
+
 
 const ViewMoreSkeleton = ({ rows = 5 }) => {
+
   return (
     <TableContainer component={Paper}>
       <Table>
@@ -32,5 +35,11 @@ const ViewMoreSkeleton = ({ rows = 5 }) => {
   );
 };
 
+ViewMoreSkeleton.propTypes = {
+  rows: PropTypes.number,
+};
+
 export default ViewMoreSkeleton;
+
+
 

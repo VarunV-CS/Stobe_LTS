@@ -1,17 +1,17 @@
-import React from "react";
+
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { ArrowSquareUpRight as ArrowSquareUpRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowSquareUpRight";
-import { CaretUpDown as CaretUpDownIcon } from "@phosphor-icons/react/dist/ssr/CaretUpDown";
+
 import { navIcons, navItems } from "../core/constants";
 import { useLocation, useNavigate } from "react-router";
 
 const MobileNav = ({ open, onClose }) => {
-  const pathname  = useLocation().pathname
+  const pathname = useLocation().pathname;
+
   return (
     <Drawer
       PaperProps={{
@@ -161,7 +161,6 @@ function NavItem({ disabled, external, href, icon, matcher, pathname, title }) {
               lineHeight: "28px",
             }}
           >
-            {console.log("MObile-Nav",title)}
             {title}
           </Typography>
         </Box>
@@ -197,11 +196,11 @@ export function isNavItemActive({
 }
 
 export function Logo({
-    color = "dark",
-    emblem,
-    height = HEIGHT,
-    width = WIDTH,
-  }) {
+  color = "dark",
+  emblem,
+  height = 32,
+  width = 122,
+}) {
     let url = "/assets/cesta_logo.png";
   
     // if (emblem) {
@@ -210,7 +209,10 @@ export function Logo({
     //   url = color === 'light' ? '/assets/logo.svg' : '/assets/logo--dark.svg';
     // }
   
-    return <Box alt="logo" component="img" src={url} width={width} />;
+  return (
+    <Box alt="logo" component="img" src={url} width={width} height={height} />
+  );
+
   }
 
 export default MobileNav;
