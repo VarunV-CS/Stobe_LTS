@@ -1,15 +1,18 @@
 import React from "react";
-import ThemeProvider from "../core/theme-provider";
+import MuiThemeProvider from "../core/theme-provider";
+import { ThemeProvider } from "../contexts/ThemeContext";
 import { DeleteProvider } from "../contexts/DeleteContext";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 
 const MainLayout = ({ children }) => {
   // console.log(Children)
   return (
-    <DeleteProvider>
-      <ThemeProvider>{children}</ThemeProvider>
-      <ConfirmDeleteModal />
-    </DeleteProvider>
+    <ThemeProvider defaultMode="light">
+      <DeleteProvider>
+        <MuiThemeProvider>{children}</MuiThemeProvider>
+        <ConfirmDeleteModal />
+      </DeleteProvider>
+    </ThemeProvider>
   );
 };
 

@@ -9,11 +9,15 @@ import { Bell as BellIcon } from "@phosphor-icons/react/dist/ssr/Bell";
 import { List as ListIcon } from "@phosphor-icons/react/dist/ssr/List";
 import { MagnifyingGlass as MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { Users as UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
+import { Moon as MoonIcon } from "@phosphor-icons/react/dist/ssr/Moon";
+import { Sun as SunIcon } from "@phosphor-icons/react/dist/ssr/Sun";
 import MobileNav from "./mobile-nav";
 import UserPopover from "../core/user-popover";
+import { useTheme } from "../contexts/ThemeContext";
 
 const MainNav = () => {
   const [openNav, setOpenNav] = React.useState(false);
+  const { mode, toggleTheme } = useTheme();
 
   const userPopover = usePopover();
   return (
@@ -54,6 +58,11 @@ const MainNav = () => {
             </Tooltip> */}
           </Stack>
           <Stack sx={{ alignItems: "center" }} direction="row" spacing={2}>
+            <Tooltip title={mode === 'light' ? 'Dark Mode' : 'Light Mode'}>
+              <IconButton onClick={toggleTheme}>
+                {mode === 'light' ? <MoonIcon /> : <SunIcon />}
+              </IconButton>
+            </Tooltip>
             <Tooltip title="Contacts">
               <IconButton>
                 <UsersIcon />
