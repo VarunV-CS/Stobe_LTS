@@ -17,6 +17,9 @@ const RoleCandidatesSkeleton = ({ rows = 6 }) => {
               <Skeleton width={120} />
             </TableCell>
             <TableCell>
+              <Skeleton width={140} />
+            </TableCell>
+            <TableCell>
               <Skeleton width={90} />
             </TableCell>
             <TableCell>
@@ -38,6 +41,9 @@ const RoleCandidatesSkeleton = ({ rows = 6 }) => {
               </TableCell>
               <TableCell>
                 <Skeleton width="70%" />
+              </TableCell>
+              <TableCell>
+                <Skeleton width={90} />
               </TableCell>
               <TableCell>
                 <Skeleton width={60} />

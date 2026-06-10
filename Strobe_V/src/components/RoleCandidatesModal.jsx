@@ -76,6 +76,9 @@ const RoleCandidatesModal = ({
                     <strong>Current Role</strong>
                   </TableCell>
                   <TableCell>
+                    <strong>Client</strong>
+                  </TableCell>
+                  <TableCell>
                     <strong>Status</strong>
                   </TableCell>
                   <TableCell>
@@ -94,6 +97,7 @@ const RoleCandidatesModal = ({
                         <TableCell>{c.name || "-"}</TableCell>
                         <TableCell>{c.email || "-"}</TableCell>
                         <TableCell>{c.currentRole || "-"}</TableCell>
+                        <TableCell>{c.client || c.clientName || "-"}</TableCell>
                         <TableCell>{c.status || "-"}</TableCell>
                         <TableCell>{c.internalRAG || "-"}</TableCell>
                         <TableCell align="right">
@@ -104,7 +108,7 @@ const RoleCandidatesModal = ({
 
                     {candidates.length === 0 && !loading && (
                       <TableRow>
-                        <TableCell colSpan={6} align="center">
+                        <TableCell colSpan={7} align="center">
                           No candidates found for this role.
                         </TableCell>
                       </TableRow>
