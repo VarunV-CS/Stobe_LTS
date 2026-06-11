@@ -2,28 +2,32 @@ import Chart from 'react-apexcharts';
 import PropTypes from 'prop-types';
 
 import { Grid, Card, Typography, Box } from '@mui/material';
+import { useTheme } from '../contexts/ThemeContext';
 
 const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onViewMore, onBarClick, height = 300 }) => {
+  const { mode } = useTheme();
 
   const getColorsByLabels = (labels) => {
     const colorMap = {
-    'Amber': '#feb019',
-    'Green': '#05e395',
-    'Shortlisted': '#038ffb',
-    'Rejected': '#ff455f',
-    'Unassigned': '#775dcf'
-  };
-  
-  const predefinedColors = ['#038ffb', '#05e395', '#ff455f', '#775dcf', '#feb019'];
-  
-  const mappedColors = labels.map((label, index) => {
-    const key = label.trim();
-    return colorMap[key] || predefinedColors[index % predefinedColors.length];
-  });
-  
-  return mappedColors;
-};
+      Amber: '#feb019',
+      Green: '#05e395',
+      Shortlisted: '#038ffb',
+      Rejected: '#ff455f',
+      Unassigned: '#775dcf',
+    };
 
+    const predefinedColors = ['#038ffb', '#05e395', '#ff455f', '#775dcf', '#feb019'];
+
+    const mappedColors = labels.map((label, index) => {
+      const key = label.trim();
+      return colorMap[key] || predefinedColors[index % predefinedColors.length];
+    });
+
+    return mappedColors;
+  };
+
+  const axisLabelColor = mode === 'dark' ? '#e5e7eb' : '#111827';
+  const gridBorderColor = mode === 'dark' ? 'rgba(229, 231, 235, 0.15)' : '#e5e7eb';
 
   const chartOptions = {
     chart: {
@@ -47,7 +51,6 @@ const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onView
         },
       },
     },
-    colors: getColorsByLabels(labels),
     plotOptions: {
       bar: {
         horizontal: false,
@@ -68,23 +71,47 @@ const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onView
       categories: labels,
       labels: {
         style: {
-          fontSize: '12px'
-        }
-      }
+          fontSize: '12px',
+          colors: axisLabelColor,
+        },
+      },
+      axisBorder: {
+        show: true,
+        color: gridBorderColor,
+      },
+      axisTicks: {
+        show: true,
+        color: gridBorderColor,
+      },
     },
     yaxis: {
       title: {
-        text: 'Count'
-      }
+        text: 'Count',
+        style: {
+          color: axisLabelColor,
+        },
+      },
+      labels: {
+        style: {
+          colors: axisLabelColor,
+        },
+      },
     },
     fill: {
-      opacity: 1
+      opacity: 1,
     },
     tooltip: {
+      theme: mode === 'dark' ? 'dark' : 'light',
+      style: {
+        fontSize: '12px',
+        background: mode === 'dark' ? '#111827' : '#ffffff',
+        color: mode === 'dark' ? '#e5e7eb' : '#111827',
+      },
       y: {
-        formatter: val => `${val}`
-      }
+        formatter: (val) => `${val}`,
+      },
     },
+    colors: getColorsByLabels(labels),
     legend: {
       show: false
     },

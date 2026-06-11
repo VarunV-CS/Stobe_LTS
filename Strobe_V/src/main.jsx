@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import "./index.css";
+import "./apexcharts-dark-overrides.css";
 import App from "./App.jsx";
 import { AuthProvider } from "./core/AuthContext.jsx";
 // import {AuthP}

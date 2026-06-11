@@ -1,0 +1,34 @@
+/* ApexCharts dark-mode overrides
+   These styles are needed because ApexCharts renders its own DOM for:
+   - toolbar (kebab menu)
+   - dropdown items
+   ThemeContext/MUI colors are not applied automatically.
+*/
+
+html[data-mui-color-scheme='dark'] .apexcharts-menu,
+html[data-mui-color-scheme='dark'] .apexcharts-menu-open,
+html[data-mui-color-scheme='dark'] .apexcharts-menu-item,
+html[data-mui-color-scheme='dark'] .apexcharts-menu-item:hover {
+  background: #111827 !important;
+  color: #e5e7eb !important;
+}
+
+html[data-mui-color-scheme='dark'] .apexcharts-menu-item {
+  border-bottom-color: rgba(229, 231, 235, 0.12) !important;
+}
+
+html[data-mui-color-scheme='dark'] .apexcharts-menu-item:hover {
+  background: rgba(229, 231, 235, 0.08) !important;
+}
+
+html[data-mui-color-scheme='dark'] .apexcharts-menu-item label,
+html[data-mui-color-scheme='dark'] .apexcharts-menu-item span {
+  color: #e5e7eb !important;
+}
+
+html[data-mui-color-scheme='dark'] .apexcharts-toolbar .apexcharts-menu-icon,
+html[data-mui-color-scheme='dark'] .apexcharts-toolbar .apexcharts-menu-icon svg {
+  color: #e5e7eb !important;
+  fill: #e5e7eb !important;
+}
+
