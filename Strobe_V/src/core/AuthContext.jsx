@@ -4,20 +4,34 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(
-    JSON.parse(localStorage.getItem("authData")) || null
+    (() => {
+      try {
+        return JSON.parse(localStorage.getItem("authData") || "null");
+      } catch {
+        return null;
+      }
+    })()
   );
- 
+
   const updateUser = (data) => {
-    console.log(data)
     setCurrentUser(data);
   };
 
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem("authData");
+  };
+
   useEffect(() => {
-    localStorage.setItem("authData", JSON.stringify(currentUser));
+    if (currentUser) {
+      localStorage.setItem("authData", JSON.stringify(currentUser));
+    }
   }, [currentUser]);
+
   return (
-    <AuthContext.Provider value={{ currentUser, updateUser }}>
+    <AuthContext.Provider value={{ currentUser, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+

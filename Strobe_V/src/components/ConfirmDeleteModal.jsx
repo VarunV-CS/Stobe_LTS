@@ -26,14 +26,6 @@ const ConfirmDeleteModal = () => {
       <DialogContent>
         <Typography sx={{ mb: 2 }}>
           Are you sure you want to delete {itemName}? This action cannot be undone.
-
-
-
-
-
-
-
-
         </Typography>
         <Typography variant="body2" color="error.main">
 

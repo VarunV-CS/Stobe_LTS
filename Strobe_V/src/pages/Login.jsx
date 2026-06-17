@@ -48,11 +48,14 @@ const Login = () => {
     setOpenState(false);
   };
 
+  const { currentUser } = React.useContext(AuthContext);
+
   React.useEffect(() => {
-    if (localStorage.getItem("authData")) {
-      navigate("/");
+    if (currentUser) {
+      navigate("/dashboard", { replace: true });
     }
-  }, [navigate]);
+  }, [currentUser, navigate]);
+
 
   const [isPending, setIsPending] = React.useState(false);
   const {

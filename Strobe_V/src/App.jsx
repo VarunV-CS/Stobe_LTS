@@ -66,6 +66,7 @@ function App() {
       <MainLayout>
         <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
             {routes.map(({ path, element }) => (
               <Route

@@ -15,16 +15,17 @@ import { AuthContext } from "./AuthContext";
 
 const UserPopover = ({ anchorEl, onClose, open }) => {
   const navigate = useNavigate();
-  const {currentUser} = React.useContext(AuthContext)
+  const { currentUser, logout } = React.useContext(AuthContext);
 
   const handleSignOut = React.useCallback(async () => {
     try {
-      localStorage.removeItem("authData");
-      navigate("/login");
+      logout();
+      navigate("/login", { replace: true });
     } catch (err) {
       console.error("Sign out error", err);
     }
-  }, []);
+  }, [logout, navigate]);
+
 
   const handleNavigate = () => {
     navigate('/profile')

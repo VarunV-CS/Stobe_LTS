@@ -1,13 +1,13 @@
-import React from 'react'
+import React from "react";
 import { Navigate, Outlet } from "react-router";
+import { AuthContext } from "../core/AuthContext";
 
 const ProtectedRoute = () => {
-   
-    const token = !!JSON.parse(localStorage.getItem('authData') || "false");
+  const { currentUser } = React.useContext(AuthContext);
 
-    console.log(token)
+  const isAuthenticated = !!currentUser;
 
-    return token ? <Outlet /> : <Navigate to="/login" />;
-}
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+};
 
 export default ProtectedRoute
