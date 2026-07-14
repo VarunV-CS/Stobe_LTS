@@ -27,6 +27,8 @@ import { Link, Typography, Snackbar ,Chip} from '@mui/material';
 import DialogTitle from "@mui/material/DialogTitle";
 import Dialog from "@mui/material/Dialog";
 import axios from "axios";
+import EditCandidateModal from "../components/EditCandidateModal";
+
 
 import {
   currency,
@@ -98,6 +100,8 @@ const grey = {
 const EditCandidate = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     lastName: "",
@@ -339,7 +343,7 @@ const EditCandidate = () => {
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Card
           sx={{
             backgroundColor: "#ffffff",
@@ -364,6 +368,17 @@ const EditCandidate = () => {
                   Update
                 </Button>
               </CardActions>
+              <CardActions>
+                <Button
+                  size="medium"
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setEditModalOpen(true)}
+                >
+                  TEST
+                </Button>
+              </CardActions>
+
               <CardActions>
                 <Button
                   size="medium"
@@ -719,7 +734,10 @@ const EditCandidate = () => {
                 </FormControl>
               </Grid>
               <Grid md={6} xs={12}>
-                <FormControl fullWidth disabled>
+                <FormControl fullWidth disabled={true} required={false} error={false} sx={{
+                  '& .MuiFormLabel-asterisk': { color: 'inherit' },
+                }}>
+
                   <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
                     <DemoContainer components={["DatePicker"]} fullWidth>
                       <DatePicker
@@ -975,8 +993,16 @@ const EditCandidate = () => {
         onClose={handleCloseSnackbar}
         message={snackbarMessage}
       />
+
+      <EditCandidateModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        candidateId={id}
+        onSuccess={() => navigate("/candidates")}
+      />
     </>
   );
 };
 
 export default EditCandidate;
+
