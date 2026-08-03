@@ -264,6 +264,31 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
     }
   };
 
+  const getFileNameFromUrl = (url) => {
+    if (!url) return "";
+    try {
+      // Works for both raw filenames and URLs (incl. querystrings)
+      const lastSegment = String(url).split("/").pop().split("?")[0];
+      // Decode %20 etc. and remove any trailing junk after the real extension
+      const decoded = decodeURIComponent(lastSegment);
+      // Keep only up to the actual extension (stop at first real extension occurrence)
+      // and drop any trailing token/junk after it.
+      // Example input may look like: "...Name..pdf<token>"
+      const extMatch = decoded.match(/\.(pdf|docx?|txt|jpe?g|png)(?=$|[?#/])/i) || decoded.match(/\.(pdf|docx?|txt|jpe?g|png)/i);
+      if (!extMatch) return decoded;
+
+      const extWithDot = extMatch[0]; // includes the dot, e.g. ".pdf"
+      const extIndex = decoded.toLowerCase().indexOf(extWithDot.toLowerCase());
+      if (extIndex === -1) return decoded;
+
+      // User wants: filename without the extension as well
+      // e.g. "...Name..pdf<token>" -> "...Name"
+      return decoded.slice(0, extIndex);
+    } catch {
+      return String(url);
+    }
+  };
+
   const downloadHandler = (fileName) => {
     const documentUrl = `${fileName}`;
     window.open(documentUrl, "_blank");
@@ -766,20 +791,39 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
                         defaultValue=""
                       >
                         {resume.length > 0 ? (
-                          resume.map((fileName, index) => (
-                            <MenuItem key={index} value={fileName}>
-                              <Link
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  downloadHandler(fileName);
-                                }}
-                                underline="hover"
-                                color="primary"
-                              >
-                                📄 {fileName}
-                              </Link>
-                            </MenuItem>
-                          ))
+                          resume.map((fileName, index) => {
+                            const displayName = getFileNameFromUrl(fileName);
+                            return (
+                              <MenuItem key={index} value={fileName} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <span>{displayName}</span>
+                                <Link
+                                  component="button"
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    downloadHandler(fileName);
+                                  }}
+                                  sx={{
+                                    ml: 1,
+                                    flexShrink: 0,
+                                    fontWeight: 600,
+                                    color: "primary.main",
+                                    textDecoration: "none",
+                                    borderRadius: 1,
+                                    px: 0.75,
+                                    py: 0.25,
+                                    "&:hover": {
+                                      backgroundColor: "rgba(25, 118, 210, 0.12)",
+                                      textDecoration: "none",
+                                      color: "primary.dark",
+                                    },
+                                  }}
+                                >
+                                  ⬇
+                                </Link>
+                              </MenuItem>
+                            );
+                          })
                         ) : (
                           <MenuItem disabled>No documents uploaded</MenuItem>
                         )}
