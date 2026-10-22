@@ -30,6 +30,7 @@ import { BASE_URL } from "../core/constants";
 import { AuthContext } from "../core/AuthContext";
 import CandidatesDashboardCard from "../components/CandidatesDashboardCard";
 import CandidatesTableSkeleton from "../components/CandidatesTableSkeleton";
+import EditCandidateModal from "../components/EditCandidateModal";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -56,6 +57,8 @@ const Candidates = () => {
   const [open, setOpen] = React.useState(false);
   const [recentCandidatesCount, setRecentCandidatesCount] = React.useState(0);
   const [importError, setImportError] = React.useState(null);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = React.useState(null);
 
   const getCandidates = async () => {
     try {
@@ -158,6 +161,14 @@ const Candidates = () => {
   };
   const importHandler = () => {
     setOpen(true);
+  };
+  const handleEditCandidate = (candidateId) => {
+    setSelectedCandidateId(candidateId);
+    setEditModalOpen(true);
+  };
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setSelectedCandidateId(null);
   };
   const exportHandler = async () => {
     try {
@@ -409,9 +420,16 @@ const Candidates = () => {
             rowsPerPage={rowsPerPage}
             onPageChange={handlePageChange}
             onRowsPerPageChange={handleRowsPerPageChange}
+            onEditCandidate={handleEditCandidate}
           />
         )}
       </Stack>
+      <EditCandidateModal
+        open={editModalOpen}
+        onClose={handleEditModalClose}
+        candidateId={selectedCandidateId}
+        onSuccess={getCandidates}
+      />
       <Box sx={{ padding: "20px" }}>
         <Dialog
           onClose={handleClose}

@@ -3,7 +3,6 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
 const SnackBar = ({openState, setOpenState, type, text}) => {
-    console.log({openState, type, text})
     const handleClose = (event, reason) => {
         if (reason === "clickaway") {
           return;
@@ -19,7 +18,7 @@ const SnackBar = ({openState, setOpenState, type, text}) => {
       anchorOrigin={{ vertical: "top", horizontal: "right" }}
     >
       <Alert
-        onClose={() => handleClose}
+        onClose={handleClose}
         severity={type}
         variant="filled"
         sx={{ width: "100%" }}

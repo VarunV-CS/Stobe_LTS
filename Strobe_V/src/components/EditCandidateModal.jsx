@@ -22,8 +22,10 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import Link from "@mui/material/Link";
 import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
 import axios from "axios";
+import { useTheme } from "../contexts/ThemeContext";
 
 
 import {
@@ -49,7 +51,7 @@ const VisuallyHiddenInput = styled("input")({
 
 const TextareaAutosize = styled(BaseTextareaAutosize)(({ theme }) => ({
   boxSizing: "border-box",
-  width: 569,
+  width: "100%",
   fontFamily: '"IBM Plex Sans", sans-serif',
   fontSize: "0.875rem",
   fontWeight: 400,
@@ -57,15 +59,24 @@ const TextareaAutosize = styled(BaseTextareaAutosize)(({ theme }) => ({
   padding: "8px 12px",
   borderRadius: 8,
   color: theme.palette.mode === "dark" ? "#d1d5db" : "#111827",
-  background: theme.palette.mode === "dark" ? "rgba(255,255,255,0.06)" : "#f3f4f6",
-  border: `1px solid ${theme.palette.mode === "dark" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)"}`,
+  background: "transparent",
+  backgroundColor: "transparent",
+  border: `2px solid ${theme.palette.mode === "dark" ? "#ffffff" : "rgba(15, 23, 42, 0.12)"}`,
   boxShadow: `0 2px 2px ${theme.palette.mode === "dark" ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.05)"}`,
   "&:focus": {
     outline: "none",
+    background: theme.palette.mode === "dark" ? "rgba(255,255,255,0.06)" : "#f3f4f6",
+    backgroundColor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.06)" : "#f3f4f6",
+    borderColor: theme.palette.mode === "dark" ? "#ffffff" : "rgba(15, 23, 42, 0.25)",
+  },
+  "&::placeholder": {
+    color: theme.palette.mode === "dark" ? "#94a3b8" : "#64748b",
+    opacity: 1,
   },
 }));
 
 function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
+  const { mode } = useTheme();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -110,6 +121,13 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
 
   const [clientOptions, setClientOptions] = useState([]);
   const [roleOptions, setRoleOptions] = useState([]);
+  const isDark = mode === "dark";
+  const surfaceBg = isDark ? "#0f172a" : "#ffffff";
+  const surfaceAlt = isDark ? "#111827" : "#f8fafc";
+  const borderColor = isDark ? "rgba(148, 163, 184, 0.22)" : "rgba(15, 23, 42, 0.12)";
+  const textPrimary = isDark ? "#e5e7eb" : "#111827";
+  const textSecondary = isDark ? "#94a3b8" : "#475569";
+  const fieldBg = isDark ? "rgba(255,255,255,0.04)" : "#ffffff";
 
   const isRequiredValid = useMemo(() => {
     // Basic required fields as per existing form marked `required`
@@ -174,8 +192,28 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
   };
 
   const handleclientsInterviewDateChange = (e) => {
-    const dat = dayjs(e.$d).format("DD-MM-YYYY");
+    const dat = e ? dayjs(e.$d).format("YYYY-MM-DD") : "";
     setFormData((prev) => ({ ...prev, clientsInterviewDate: dat }));
+  };
+
+  const normalizeInterviewDate = (value) => {
+    if (!value) return null;
+    if (dayjs.isDayjs(value)) return value;
+
+    const parsed = dayjs(value);
+    if (parsed.isValid()) return parsed;
+
+    if (typeof value === "string") {
+      const parts = value.split("-");
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        const isoCandidate = `${year}-${month}-${day}`;
+        const isoParsed = dayjs(isoCandidate);
+        if (isoParsed.isValid()) return isoParsed;
+      }
+    }
+
+    return null;
   };
 
   const handleSubmit = async (e) => {
@@ -207,8 +245,8 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
 
       setSnackbarMessage("Candidate updated successfully!");
       setOpenSnackbar(true);
-      onSuccess?.();
       onClose?.();
+      onSuccess?.();
     } catch (error) {
       console.error("Error updating candidate:", error);
       setSnackbarMessage(error.message || "An unexpected error occurred.");
@@ -316,17 +354,20 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
         fullWidth
         maxWidth="lg"
         scroll="paper"
-        PaperProps={{
-          sx: {
-            backgroundColor: (theme) =>
-              theme.palette.mode === "dark" ? "#0b1220" : "#ffffff",
+        sx={{
+          "& .MuiDialog-paper": {
+            backgroundColor: surfaceBg,
+            backgroundImage: "none",
+            color: textPrimary,
+            border: `1px solid ${borderColor}`,
           },
         }}
       >
         <DialogTitle
           sx={{
-            backgroundColor: (theme) =>
-              theme.palette.mode === "dark" ? "#0f1b33" : "#ffffff",
+            backgroundColor: surfaceBg,
+            color: textPrimary,
+            borderBottom: `1px solid ${borderColor}`,
           }}
         >
           <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, alignItems: "center" }}>
@@ -340,10 +381,31 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
                 variant="outlined"
                 color="warning"
                 onClick={() => setUploadDialogOpen(true)}
+                sx={{
+                  color: textPrimary,
+                  borderColor,
+                  "&:hover": {
+                    borderColor: isDark ? "#f59e0b" : "#b45309",
+                    backgroundColor: isDark ? "rgba(245, 158, 11, 0.12)" : "rgba(245, 158, 11, 0.08)",
+                  },
+                }}
               >
                 Upload documents
               </Button>
-              <Button size="medium" variant="outlined" color="error" onClick={onClose}>
+              <Button
+                size="medium"
+                variant="outlined"
+                color="error"
+                onClick={onClose}
+                sx={{
+                  color: textPrimary,
+                  borderColor,
+                  "&:hover": {
+                    borderColor: "#ef4444",
+                    backgroundColor: isDark ? "rgba(239, 68, 68, 0.12)" : "rgba(239, 68, 68, 0.08)",
+                  },
+                }}
+              >
                 Cancel
               </Button>
             </Box>
@@ -354,7 +416,13 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
 
 
         <form onSubmit={handleSubmit} noValidate>
-            <DialogContent sx={{ pt: 3 }}>
+            <DialogContent
+              sx={{
+                pt: 3,
+                backgroundColor: surfaceBg,
+                color: textPrimary,
+              }}
+            >
             {loading ? (
               <Box sx={{ py: 4, textAlign: "center" }}>
                 <Typography>Loading...</Typography>
@@ -364,14 +432,41 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
 
                 <Grid container spacing={3}>
                   <Grid md={6} xs={12}>
-                    <FormControl fullWidth required>
+                    <FormControl
+                      fullWidth
+                      required
+                      sx={{
+                        "& .MuiInputLabel-root": { color: textSecondary },
+                        "& .MuiInputLabel-root.Mui-focused": { color: isDark ? "#93c5fd" : "#2563eb" },
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: fieldBg,
+                          color: textPrimary,
+                        },
+                        "& .MuiOutlinedInput-notchedOutline": {
+                          borderColor,
+                        },
+                        "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+                          borderColor: isDark ? "#94a3b8" : "#64748b",
+                        },
+                        "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                          borderColor: isDark ? "#60a5fa" : "#2563eb",
+                        },
+                      }}
+                    >
                       <InputLabel shrink={!!formData.name}>First Name</InputLabel>
                       <OutlinedInput label="First Name" name="name" value={formData.name} onChange={handleChange} />
                     </FormControl>
                   </Grid>
 
                   <Grid md={6} xs={12}>
-                    <FormControl fullWidth required>
+                    <FormControl fullWidth required sx={{
+                        "& .MuiInputLabel-root": { color: textSecondary },
+                        "& .MuiInputLabel-root.Mui-focused": { color: isDark ? "#93c5fd" : "#2563eb" },
+                        "& .MuiOutlinedInput-root": { backgroundColor: fieldBg, color: textPrimary },
+                        "& .MuiOutlinedInput-notchedOutline": { borderColor },
+                        "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: isDark ? "#94a3b8" : "#64748b" },
+                        "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: isDark ? "#60a5fa" : "#2563eb" },
+                      }}>
                       <InputLabel>Currency</InputLabel>
                       <Select label="Currency" name="currency" value={formData.currency} onChange={handleChange}>
                         {currency.map((option) => (
@@ -384,14 +479,28 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
                   </Grid>
 
                   <Grid md={6} xs={12}>
-                    <FormControl fullWidth required>
+                    <FormControl fullWidth required sx={{
+                        "& .MuiInputLabel-root": { color: textSecondary },
+                        "& .MuiInputLabel-root.Mui-focused": { color: isDark ? "#93c5fd" : "#2563eb" },
+                        "& .MuiOutlinedInput-root": { backgroundColor: fieldBg, color: textPrimary },
+                        "& .MuiOutlinedInput-notchedOutline": { borderColor },
+                        "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: isDark ? "#94a3b8" : "#64748b" },
+                        "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: isDark ? "#60a5fa" : "#2563eb" },
+                      }}>
                       <InputLabel shrink={!!formData.surName}>Last Name</InputLabel>
                       <OutlinedInput label="Last Name" name="surName" value={formData.surName} onChange={handleChange} />
                     </FormControl>
                   </Grid>
 
                   <Grid md={6} xs={12}>
-                    <FormControl fullWidth required>
+                    <FormControl fullWidth required sx={{
+                        "& .MuiInputLabel-root": { color: textSecondary },
+                        "& .MuiInputLabel-root.Mui-focused": { color: isDark ? "#93c5fd" : "#2563eb" },
+                        "& .MuiOutlinedInput-root": { backgroundColor: fieldBg, color: textPrimary },
+                        "& .MuiOutlinedInput-notchedOutline": { borderColor },
+                        "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": { borderColor: isDark ? "#94a3b8" : "#64748b" },
+                        "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: isDark ? "#60a5fa" : "#2563eb" },
+                      }}>
                       <InputLabel shrink={!!formData.currentCTC}>Current CTC</InputLabel>
                       <OutlinedInput
                         value={formData.currentCTC}
@@ -681,7 +790,7 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
                           <DatePicker
                             label="Clients Interview Date"
                             format="MM/DD/YYYY"
-                            value={dayjs(formData.clientsInterviewDate) || ""}
+                            value={normalizeInterviewDate(formData.clientsInterviewDate)}
                             onChange={handleclientsInterviewDateChange}
                             fullWidth
                             sx={{ width: "100%" }}
@@ -702,8 +811,8 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, newLastComm: e.target.value }))
                         }
-                        style={{ width: "100%", padding: "8px", fontSize: "14px" }}
                         minRows={3}
+                        style={{ width: "100%", padding: "8px", fontSize: "14px" }}
                       />
                     </FormControl>
                   </Grid>
@@ -866,11 +975,32 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
             )}
           </DialogContent>
 
-          <DialogActions sx={{ px: 3, pb: 2 }}>
+          <DialogActions
+            sx={{
+              px: 3,
+              pb: 2,
+              backgroundColor: surfaceBg,
+              borderTop: `1px solid ${borderColor}`,
+              justifyContent: "flex-end",
+            }}
+          >
                   <Button
                     type="submit"
                     variant="outlined"
-                    disabled={(!isRequiredValid || loading) ? false : false}
+                    disabled={loading}
+                    sx={{
+                      color: textPrimary,
+                      borderColor,
+                      backgroundColor: isDark ? "rgba(148, 163, 184, 0.08)" : "#ffffff",
+                      "&:hover": {
+                        borderColor: isDark ? "#60a5fa" : "#2563eb",
+                        backgroundColor: isDark ? "rgba(96, 165, 250, 0.12)" : "#eff6ff",
+                      },
+                      "&.Mui-disabled": {
+                        color: textSecondary,
+                        borderColor: isDark ? "rgba(148, 163, 184, 0.16)" : "rgba(15, 23, 42, 0.12)",
+                      },
+                    }}
                   >
                     Update
                   </Button>
@@ -885,10 +1015,23 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
         sx={{ padding: "20px" }}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: (theme) => theme.palette.background.paper,
+            backgroundImage: "none",
+          },
+        }}
       >
-        <DialogTitle sx={{ paddingTop: "30px" }}>Upload Documents</DialogTitle>
+        <DialogTitle
+          sx={{
+            paddingTop: "30px",
+            backgroundColor: (theme) => theme.palette.background.paper,
+          }}
+        >
+          Upload Documents
+        </DialogTitle>
         <form onSubmit={uploadHandler}>
-          <Box sx={{ padding: "0 30px" }}>
+          <Box sx={{ padding: "0 30px", backgroundColor: (theme) => theme.palette.background.paper }}>
             <Button
               component="label"
               fullWidth
@@ -906,7 +1049,7 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
             </Button>
           </Box>
 
-          <Box sx={{ padding: "20px 30px" }}>
+          <Box sx={{ padding: "20px 30px", backgroundColor: (theme) => theme.palette.background.paper }}>
             <Typography variant="h6" gutterBottom>
               Selected Files:
             </Typography>
@@ -934,7 +1077,14 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
             )}
           </Box>
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", padding: "30px" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "30px",
+              backgroundColor: (theme) => theme.palette.background.paper,
+            }}
+          >
             <Button
               size="medium"
               variant="outlined"
@@ -955,11 +1105,19 @@ function EditCandidateModal({ open, onClose, candidateId, onSuccess }) {
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={() => setOpenSnackbar(false)}
-        message={snackbarMessage}
-      />
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setOpenSnackbar(false)}
+          severity={snackbarMessage.toLowerCase().includes("failed") || snackbarMessage.toLowerCase().includes("error") ? "error" : "success"}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 }
 
 export default EditCandidateModal;
-

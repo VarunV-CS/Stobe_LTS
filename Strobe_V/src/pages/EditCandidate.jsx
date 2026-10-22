@@ -206,9 +206,29 @@ const EditCandidate = () => {
       noticePeriod: dat,
     }));
   };
+
+  const normalizeInterviewDate = (value) => {
+    if (!value) return null;
+    if (dayjs.isDayjs(value)) return value;
+
+    const parsed = dayjs(value);
+    if (parsed.isValid()) return parsed;
+
+    if (typeof value === "string") {
+      const parts = value.split("-");
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        const isoCandidate = `${year}-${month}-${day}`;
+        const isoParsed = dayjs(isoCandidate);
+        if (isoParsed.isValid()) return isoParsed;
+      }
+    }
+
+    return null;
+  };
   
   const handleclientsInterviewDateChange = (e) => {
-    let dat = dayjs(e.$d).format("DD-MM-YYYY");
+    let dat = e ? dayjs(e.$d).format("YYYY-MM-DD") : "";
     setFormData((prevData) => ({
       ...prevData,
       clientsInterviewDate: dat,
@@ -743,7 +763,7 @@ const EditCandidate = () => {
                       <DatePicker
                         label="Clients Interview Date"
                         format="MM/DD/YYYY"
-                        value={dayjs(formData.clientsInterviewDate) || ""}
+                        value={normalizeInterviewDate(formData.clientsInterviewDate)}
                         onChange={handleclientsInterviewDateChange}
                         fullWidth
                         sx={{ width: "100%" }}
@@ -1005,4 +1025,3 @@ const EditCandidate = () => {
 };
 
 export default EditCandidate;
-

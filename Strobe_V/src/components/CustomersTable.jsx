@@ -14,8 +14,6 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import dayjs from "dayjs";
 import { Button } from "@mui/material";
-
-import { useNavigate } from "react-router";
 import axios from "axios";
 const CustomersTable = ({
   count = 0,
@@ -24,12 +22,8 @@ const CustomersTable = ({
   rowsPerPage = 0,
   onPageChange,
   onRowsPerPageChange,
+  onEditCandidate,
 }) => {
-  const navigate = useNavigate();
-  const EditHandler = (id) => {
-    navigate(`/candidates/${id}`);
-  };
- 
   const deleteCandidate = async (id) => {
     try {
       await axios.delete(`http://167.172.164.218/candidates/deleteById/${id}`);
@@ -100,8 +94,8 @@ const CustomersTable = ({
                     {dayjs(row.createdAt).format("MMM D, YYYY")}
                   </TableCell> */}
                   <TableCell sx={{ display: "flex", gap: 1 }}>
-                    <EditActionButton onClick={() => EditHandler(row._id)} />
-    <DeleteActionButton itemId={row._id} itemName={`${row.name.trim()} ${row.surName.trim()}`.trim()} onConfirmFn={() => deleteCandidate(row._id)} />
+                    <EditActionButton onClick={() => onEditCandidate?.(row._id)} />
+                    <DeleteActionButton itemId={row._id} itemName={`${row.name.trim()} ${row.surName.trim()}`.trim()} onConfirmFn={() => deleteCandidate(row._id)} />
                   </TableCell>
                 </TableRow>
               );

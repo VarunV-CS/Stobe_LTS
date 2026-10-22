@@ -57,6 +57,51 @@ const Roles = () => {
   const [roleCandidatesLoading, setRoleCandidatesLoading] = useState(false);
   const [roleCandidatesError, setRoleCandidatesError] = useState(null);
 
+  const normalizeRoleClients = (clientValue) => {
+    const clientList = Array.isArray(clientValue)
+      ? clientValue
+      : clientValue
+        ? [clientValue]
+        : [];
+
+    return clientList
+      .map((client) => {
+        if (typeof client === "string") {
+          const matchedClient = clients.find((c) => c._id === client);
+          return { _id: client, name: matchedClient?.name || client };
+        }
+
+        return {
+          _id: client?._id || client?.id || client?.name,
+          name: client?.name || client?.clientName || client?.label,
+        };
+      })
+      .filter((client) => client.name);
+  };
+
+  const normalizeCandidateClients = (candidate) => {
+    const clientValue = candidate.client || candidate.clients || candidate.clientId || candidate.clientName;
+    const clientList = Array.isArray(clientValue)
+      ? clientValue
+      : clientValue
+        ? [clientValue]
+        : [];
+
+    return clientList
+      .map((client) => {
+        if (typeof client === "string") {
+          const matchedClient = clients.find((c) => c._id === client);
+          return { _id: client, name: matchedClient?.name || client };
+        }
+
+        return {
+          _id: client?._id || client?.id || client?.name,
+          name: client?.name || client?.clientName || client?.label,
+        };
+      })
+      .filter((client) => client.name);
+  };
+
   useEffect(() => {
     axios.get("http://167.172.164.218/client/get")
       .then((res) => setClients(res.data))
@@ -109,7 +154,10 @@ const Roles = () => {
     setEditingRole(null);
   };
 
-  const handleOpenRoleCandidates = async (roleName) => {
+  const handleOpenRoleCandidates = async (role) => {
+    const roleName = typeof role === "string" ? role : role?.roleName;
+    const roleClients = normalizeRoleClients(typeof role === "string" ? [] : role?.client);
+
     setSelectedRoleName(roleName || "");
     setRoleCandidatesOpen(true);
     setRoleCandidatesLoading(true);
@@ -128,16 +176,21 @@ const Roles = () => {
       );
 
       setRoleCandidates(
-        filtered.map((c) => ({
-          _id: c._id,
-          candidateID: c.candidateID,
-          name: `${c.name || ""} ${c.surName || ""}`.trim() || c.name,
-          email: c.email,
-          currentRole: c.currentRole,
-          status: c.status,
-          internalRAG: c.internalRAG,
-          createdAt: c.createdAt,
-        }))
+        filtered.map((c) => {
+          const candidateClients = normalizeCandidateClients(c);
+
+          return {
+            _id: c._id,
+            candidateID: c.candidateID,
+            name: `${c.name || ""} ${c.surName || ""}`.trim() || c.name,
+            email: c.email,
+            currentRole: c.currentRole,
+            client: candidateClients.length > 0 ? candidateClients : roleClients,
+            status: c.status,
+            internalRAG: c.internalRAG,
+            createdAt: c.createdAt,
+          };
+        })
       );
     } catch (err) {
       console.error("Error fetching candidates for role:", err);
@@ -330,7 +383,7 @@ const handleSave = async () => {
                               <EditActionButton onClick={() => handleOpen(role)} />
                               <IconButton
                                 size="small"
-                                onClick={() => handleOpenRoleCandidates(role.roleName)}
+                                onClick={() => handleOpenRoleCandidates(role)}
                                 aria-label={`View candidates for ${role.roleName}`}
                                 sx={{
                                   borderRadius: 1,

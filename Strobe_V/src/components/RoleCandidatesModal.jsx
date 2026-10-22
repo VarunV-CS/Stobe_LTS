@@ -11,6 +11,8 @@ import {
   TableRow,
   Paper,
   IconButton,
+  Stack,
+  Chip,
 } from "@mui/material";
 
 import RoleCandidatesSkeleton from "./RoleCandidatesSkeleton";
@@ -23,6 +25,46 @@ const RoleCandidatesModal = ({
   candidates = [],
   loading = false,
 }) => {
+  const normalizeClients = (clientValue) => {
+    const clients = Array.isArray(clientValue)
+      ? clientValue
+      : clientValue
+        ? [clientValue]
+        : [];
+
+    return clients
+      .map((client) => {
+        if (typeof client === "string") {
+          return { _id: client, name: client };
+        }
+
+        return {
+          _id: client?._id || client?.id || client?.name,
+          name: client?.name || client?.clientName || client?.label,
+        };
+      })
+      .filter((client) => client.name);
+  };
+
+  const renderClientChips = (clientValue) => {
+    const clients = normalizeClients(clientValue);
+
+    if (clients.length === 0) return "-";
+
+    return (
+      <Stack direction="row" spacing={1} flexWrap="wrap">
+        {clients.map((client) => (
+          <Chip
+            key={client._id || client.name}
+            label={client.name}
+            size="small"
+            color="primary"
+          />
+        ))}
+      </Stack>
+    );
+  };
+
   return (
     <Modal
       open={open}
@@ -97,7 +139,7 @@ const RoleCandidatesModal = ({
                         <TableCell>{c.name || "-"}</TableCell>
                         <TableCell>{c.email || "-"}</TableCell>
                         <TableCell>{c.currentRole || "-"}</TableCell>
-                        <TableCell>{c.client || c.clientName || "-"}</TableCell>
+                        <TableCell>{renderClientChips(c.client || c.clientName)}</TableCell>
                         <TableCell>{c.status || "-"}</TableCell>
                         <TableCell>{c.internalRAG || "-"}</TableCell>
                         <TableCell align="right">
@@ -125,4 +167,3 @@ const RoleCandidatesModal = ({
 };
 
 export default RoleCandidatesModal;
-
