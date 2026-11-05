@@ -1,7 +1,7 @@
 import React from "react";
 import * as XLSX from "xlsx";
 
-import { useNavigate, useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { Box, styled } from "@mui/system";
 
 import {
@@ -13,9 +13,8 @@ import {
   CardActions,
   Grid,
   Alert,
+  Chip,
 } from "@mui/material";
-import useDebounce from "../core/useDebounce";
-
 
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import {
@@ -29,8 +28,6 @@ import CustomersTable from "../components/CustomersTable";
 import { BASE_URL } from "../core/constants";
 import { AuthContext } from "../core/AuthContext";
 import CandidatesDashboardCard from "../components/CandidatesDashboardCard";
-import CandidatesTableSkeleton from "../components/CandidatesTableSkeleton";
-import EditCandidateModal from "../components/EditCandidateModal";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -44,25 +41,54 @@ const VisuallyHiddenInput = styled("input")({
   width: 1,
 });
 
+// ---- Dashboard filter helpers ---------------------------------------------
+// The Dashboard sends { label, criteria: { field: value, ... }, recentDays? }.
+// Matching is exact (case-insensitive, trimmed) so the number of rows here
+// lines up with the number shown on the chart that was clicked.
+const norm = (v) => String(v ?? "").trim().toLowerCase();
+
+const matchesDashboardFilter = (candidate, filter) => {
+  if (!filter) return true;
+  const { criteria = {}, recentDays } = filter;
+
+  if (recentDays) {
+    const since = new Date();
+    since.setDate(since.getDate() - recentDays);
+    if (!(new Date(candidate.createdAt) >= since)) return false;
+  }
+
+  return Object.entries(criteria).every(([field, expected]) => {
+    const actual = candidate[field];
+    return Array.isArray(actual)
+      ? actual.some((v) => norm(v) === norm(expected))
+      : norm(actual) === norm(expected);
+  });
+};
+// ---------------------------------------------------------------------------
+
 const Candidates = () => {
-  const location = useLocation();
   const { currentUser } = React.useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Filter set by clicking a chart or card on the Dashboard. It lives in the
+  // router state, so it survives a refresh and is cleared by removing the chip.
+  const dashboardFilter = location.state?.dashboardFilter ?? null;
+  const clearDashboardFilter = () =>
+    navigate(location.pathname, { replace: true });
+
   const [data, setData] = React.useState([]);
   const [resume, setResume] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(25);
   const [searchQuery, setSearchQuery] = React.useState(""); // State for search
+  const [headerFilter, setHeaderFilter] = React.useState(""); // State for header filter
   const [open, setOpen] = React.useState(false);
   const [recentCandidatesCount, setRecentCandidatesCount] = React.useState(0);
   const [importError, setImportError] = React.useState(null);
-  const [editModalOpen, setEditModalOpen] = React.useState(false);
-  const [selectedCandidateId, setSelectedCandidateId] = React.useState(null);
 
   const getCandidates = async () => {
     try {
-      setLoading(true);
       const response = await fetch(`http://167.172.164.218/candidates/get1`);
       const result = await response.json();
       const sortedData = result.data.sort(
@@ -72,18 +98,16 @@ const Candidates = () => {
       // Calculate candidates from last 30 days
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const recentCandidates = sortedData.filter(candidate => 
-        new Date(candidate.createdAt) >= thirtyDaysAgo
+
+      const recentCandidates = sortedData.filter(
+        (candidate) => new Date(candidate.createdAt) >= thirtyDaysAgo
       );
-      
+
       setRecentCandidatesCount(recentCandidates.length);
       setData(sortedData || []);
     } catch (error) {
       console.error("Error fetching candidates:", error);
       setData([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -96,47 +120,66 @@ const Candidates = () => {
     getCandidates();
   }, []);
 
+  // Go back to the first page whenever any filter changes
   React.useEffect(() => {
-    const incomingSearch = location.state?.search;
-    if (typeof incomingSearch === "string" && incomingSearch.trim().length > 0) {
-      setSearchQuery(incomingSearch);
-    }
-  }, [location.state]);
-
-  const debouncedSearchQuery = useDebounce(searchQuery, 350);
-
+    setPage(0);
+  }, [dashboardFilter, searchQuery, headerFilter]);
 
   const filteredData = React.useMemo(() => {
-    const query = debouncedSearchQuery.toLowerCase().trim();
-    if (!query) return data || [];
+    // 1) Apply the dashboard filter (if any)
+    const base = (data || []).filter((candidate) =>
+      matchesDashboardFilter(candidate, dashboardFilter)
+    );
 
-      return (data || []).filter((candidate) => {
-        const normalize = (v) => {
-          if (v === null || v === undefined) return "";
-          return String(v).toLowerCase().trim();
-        };
+    // 2) Then apply the search box on top of it
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return base;
 
-        const name = normalize(candidate.name);
-        const surName = normalize(candidate.surName);
-        const fullName = normalize(`${candidate.name ?? ""} ${candidate.surName ?? ""}`);
-        const email = normalize(candidate.email);
-        const currentRole = normalize(candidate.currentRole);
-        const status = normalize(candidate.status);
-        const internalRAG = normalize(candidate.internalRAG);
-        const expectedRole = normalize(candidate.expectedRole);
+    return base.filter((candidate) => {
+      // If header filter is selected, only search in that specific field
+      if (headerFilter) {
+        switch (headerFilter) {
+          case "name":
+            return candidate.name?.toLowerCase().includes(query);
+          case "surName":
+            return candidate.surName?.toLowerCase().includes(query);
+          case "email":
+            return candidate.email?.toLowerCase().includes(query);
+          case "currentRole":
+            return candidate.currentRole?.toLowerCase().includes(query);
+          case "expectedRole":
+            if (Array.isArray(candidate.expectedRole)) {
+              return candidate.expectedRole.some((role) =>
+                role.toLowerCase().includes(query)
+              );
+            }
+            return candidate.expectedRole?.toLowerCase().includes(query);
+          case "status":
+            return candidate.status?.toLowerCase().includes(query);
+          case "internalRAG":
+            return candidate.internalRAG?.toLowerCase().includes(query);
+          default:
+            return true;
+        }
+      }
 
-        return (
-          name === query ||
-          surName === query ||
-          fullName === query ||
-          email === query ||
-          currentRole === query ||
-          status === query ||
-          internalRAG === query ||
-          expectedRole === query
-        );
-      });
-  }, [data, debouncedSearchQuery]);
+      // If no header filter, use the original logic for exact matches
+      return (
+        candidate.name?.toLowerCase().trim() === query ||
+        candidate.surName?.toLowerCase().trim() === query ||
+        `${candidate.name} ${candidate.surName}`.toLowerCase().trim() === query ||
+        candidate.email?.toLowerCase().trim() === query ||
+        candidate.currentRole?.toLowerCase().trim() === query ||
+        candidate.status?.toLowerCase().trim() === query ||
+        candidate.internalRAG?.toLowerCase().trim() === query ||
+        (Array.isArray(candidate.expectedRole)
+          ? candidate.expectedRole.some(
+              (role) => role.toLowerCase().trim() === query
+            )
+          : candidate.expectedRole?.toLowerCase().trim() === query)
+      );
+    });
+  }, [data, searchQuery, headerFilter, dashboardFilter]);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -161,14 +204,6 @@ const Candidates = () => {
   };
   const importHandler = () => {
     setOpen(true);
-  };
-  const handleEditCandidate = (candidateId) => {
-    setSelectedCandidateId(candidateId);
-    setEditModalOpen(true);
-  };
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setSelectedCandidateId(null);
   };
   const exportHandler = async () => {
     try {
@@ -205,18 +240,16 @@ const Candidates = () => {
         "internalRAG",
         "interviewer",
         "lastComms",
-    
         "noticePeriod",
         "paymentType",
         "relocate",
         "resume",
         "screenedBy",
         "screeningOutcome",
-         "status",
+        "status",
         "updatedAt",
         "workingModel",
-        "alternateContactNo"
-        
+        "alternateContactNo",
       ];
 
       // Convert data to an array format
@@ -230,7 +263,6 @@ const Candidates = () => {
             : value || "";
         })
       );
-      console.log("++++++", dataForExport);
 
       // Create worksheet and workbook
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataForExport]);
@@ -269,59 +301,57 @@ const Candidates = () => {
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
       // Validate required fields
-      const requiredFields = ['name', 'surName', 'contactNo', 'email', 'currentRole', 'expectedRole'];
-      const missingFields = requiredFields.filter((field) => {
-        const row0 = jsonData[0] ?? {};
-        return !Object.prototype.hasOwnProperty.call(row0, field);
-      });
+      const requiredFields = ["name", "surName", "contactNo", "email", "currentRole", "expectedRole"];
+      const missingFields = requiredFields.filter(
+        (field) => !jsonData[0]?.hasOwnProperty(field)
+      );
 
-      
       if (missingFields.length > 0) {
-        setImportError(`Missing required fields: ${missingFields.join(', ')}`);
+        setImportError(`Missing required fields: ${missingFields.join(", ")}`);
         return;
       }
 
       // Transform data to match API requirements
-      const transformedData = jsonData.map(row => ({
+      const transformedData = jsonData.map((row) => ({
         name: row.name,
         surName: row.surName,
         contactNo: row.contactNo,
-        alternateContactNo: row.alternateContactNo || '',
-        experience: row.experience || '',
-        noticePeriod: row.noticePeriod || '',
+        alternateContactNo: row.alternateContactNo || "",
+        experience: row.experience || "",
+        noticePeriod: row.noticePeriod || "",
         email: row.email,
-        currentLocation: row.currentLocation || '',
-        screenedBy: row.screenedBy || '',
-        workingModel: row.workingModel || '',
+        currentLocation: row.currentLocation || "",
+        screenedBy: row.screenedBy || "",
+        workingModel: row.workingModel || "",
         currentRole: row.currentRole,
         expectedRole: row.expectedRole,
-        currency: row.currency || '',
-        currentCTC: row.currentCTC || '',
-        expectedCTC: row.expectedCTC || '',
-        paymentType: row.paymentType || '',
-        relocate: row.relocate || '',
-        interviewer: row.interviewer || '',
-        status: row.status || '',
-        screeningNotes: row.screeningNotes || '',
-        screeningOutcome: row.screeningOutcome || '',
-        clientsInterviewDate: row.clientsInterviewDate || '',
-        internalInterviewNotes: row.internalInterviewNotes || '',
-        internalRAG: row.internalRAG || '',
-        clientFeedback: row.clientFeedback || '',
+        currency: row.currency || "",
+        currentCTC: row.currentCTC || "",
+        expectedCTC: row.expectedCTC || "",
+        paymentType: row.paymentType || "",
+        relocate: row.relocate || "",
+        interviewer: row.interviewer || "",
+        status: row.status || "",
+        screeningNotes: row.screeningNotes || "",
+        screeningOutcome: row.screeningOutcome || "",
+        clientsInterviewDate: row.clientsInterviewDate || "",
+        internalInterviewNotes: row.internalInterviewNotes || "",
+        internalRAG: row.internalRAG || "",
+        clientFeedback: row.clientFeedback || "",
         lastComms: row.lastComms || [],
       }));
 
       // Upload data to API
-      const response = await fetch('http://167.172.164.218/candidates/import', {
-        method: 'POST',
+      const response = await fetch("http://167.172.164.218/candidates/import", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(transformedData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to import candidates');
+        throw new Error("Failed to import candidates");
       }
 
       // Refresh the candidates list
@@ -330,8 +360,10 @@ const Candidates = () => {
       setResume([]);
       setImportError(null);
     } catch (error) {
-      console.error('Error importing file:', error);
-      setImportError(error.message || 'Failed to import file. Please check the format and try again.');
+      console.error("Error importing file:", error);
+      setImportError(
+        error.message || "Failed to import file. Please check the format and try again."
+      );
     }
   };
 
@@ -362,7 +394,7 @@ const Candidates = () => {
       "internalInterviewNotes",
       "internalRAG",
       "clientFeedback",
-      "lastComms"
+      "lastComms",
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet([headers]);
@@ -374,10 +406,8 @@ const Candidates = () => {
   return (
     <div>
       <Stack spacing={3}>
-       
-      <Stack direction="row" spacing={3}>
+        <Stack direction="row" spacing={3}>
           <Stack spacing={1} sx={{ flex: "1 1 auto" }}>
-
             <Typography variant="h4">Candidates</Typography>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
               <Button
@@ -406,30 +436,34 @@ const Candidates = () => {
             </Button>
           </div>
         </Stack>
+
+        {/* Filter coming from a Dashboard click */}
+        {dashboardFilter && (
+          <Box>
+            <Chip
+              color="primary"
+              variant="outlined"
+              label={`From dashboard: ${dashboardFilter.label}`}
+              onDelete={clearDashboardFilter}
+            />
+          </Box>
+        )}
+
         <CustomersFilters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          headerFilter={headerFilter}
+          setHeaderFilter={setHeaderFilter}
         />
-        {loading ? (
-          <CandidatesTableSkeleton rowsPerPage={rowsPerPage} />
-        ) : (
-          <CustomersTable
-            count={filteredData.length}
-            rows={paginatedCustomers}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            onPageChange={handlePageChange}
-            onRowsPerPageChange={handleRowsPerPageChange}
-            onEditCandidate={handleEditCandidate}
-          />
-        )}
+        <CustomersTable
+          count={filteredData.length}
+          rows={paginatedCustomers}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+        />
       </Stack>
-      <EditCandidateModal
-        open={editModalOpen}
-        onClose={handleEditModalClose}
-        candidateId={selectedCandidateId}
-        onSuccess={getCandidates}
-      />
       <Box sx={{ padding: "20px" }}>
         <Dialog
           onClose={handleClose}
