@@ -1,167 +1,90 @@
-import Chart from 'react-apexcharts';
-import PropTypes from 'prop-types';
+import React from "react";
+import Chart from "react-apexcharts";
+import { Grid, Card, CardContent, Typography, Button, Box } from "@mui/material";
 
-import { Grid, Card, Typography, Box } from '@mui/material';
-import { useTheme } from '../contexts/ThemeContext';
+/**
+ * Props (same as the Dashboard already passes):
+ *   data        number[]   values, one per bar
+ *   labels      string[]   x-axis labels, one per bar
+ *   title       string
+ *   onViewMore  () => void
+ *   onBarClick  (index: number) => void   index of the clicked bar
+ */
+const BarChart = ({
+  data = [],
+  labels = [],
+  title,
+  onViewMore,
+  onBarClick,
+  height = 300,
+}) => {
+  // Always call the latest handler. react-apexcharts doesn't reliably
+  // re-bind chart events when only a callback prop changes.
+  const clickRef = React.useRef(onBarClick);
+  clickRef.current = onBarClick;
 
-const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onViewMore, onBarClick, height = 300 }) => {
-  const { mode } = useTheme();
-
-  const getColorsByLabels = (labels) => {
-    const colorMap = {
-      Amber: '#feb019',
-      Green: '#05e395',
-      Shortlisted: '#038ffb',
-      Rejected: '#ff455f',
-      Unassigned: '#775dcf',
-    };
-
-    const predefinedColors = ['#038ffb', '#05e395', '#ff455f', '#775dcf', '#feb019'];
-
-    const mappedColors = labels.map((label, index) => {
-      const key = label.trim();
-      return colorMap[key] || predefinedColors[index % predefinedColors.length];
-    });
-
-    return mappedColors;
-  };
-
-  const axisLabelColor = mode === 'dark' ? '#e5e7eb' : '#111827';
-  const gridBorderColor = mode === 'dark' ? 'rgba(229, 231, 235, 0.15)' : '#e5e7eb';
-
-  const chartOptions = {
+  const options = {
     chart: {
-      type: 'bar',
-      height: height,
-      toolbar: { 
-        show: true,
-        export: {
-          png: { filename: `${title || 'chart'}` },
-          svg: { filename: `${title || 'chart'}` },
-          csv: { filename: `${title || 'chart'}` }
-        }
-      },
+      type: "bar",
+      toolbar: { show: false },
       events: {
-        dataPointSelection: (event, chartContext, config) => {
-          if (!onBarClick) return;
-          const dataPointIndex = config?.dataPointIndex;
-          if (typeof dataPointIndex !== 'number') return;
-          const selectedLabel = labels[dataPointIndex];
-          if (selectedLabel) onBarClick(selectedLabel);
+        // For bar charts `click` is the reliable event: it carries the
+        // dataPointIndex of the bar under the cursor (dataPointSelection
+        // often doesn't fire on bars with the default shared tooltip).
+        click: (_event, _chartContext, config) => {
+          const i = config?.dataPointIndex;
+          if (typeof i === "number" && i >= 0) clickRef.current?.(i);
         },
       },
     },
     plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: '55%',
-        borderRadius: 4,
-        distributed: true
-      }
+      bar: { distributed: true, borderRadius: 4, columnWidth: "50%" },
     },
-    dataLabels: {
-      enabled: false
-    },
-    stroke: {
-      show: true,
-      width: 2,
-      colors: ['transparent']
-    },
-    xaxis: {
-      categories: labels,
-      labels: {
-        style: {
-          fontSize: '12px',
-          colors: axisLabelColor,
-        },
-      },
-      axisBorder: {
-        show: true,
-        color: gridBorderColor,
-      },
-      axisTicks: {
-        show: true,
-        color: gridBorderColor,
-      },
-    },
-    yaxis: {
-      title: {
-        text: 'Count',
-        style: {
-          color: axisLabelColor,
-        },
-      },
-      labels: {
-        style: {
-          colors: axisLabelColor,
-        },
-      },
-    },
-    fill: {
-      opacity: 1,
-    },
-    tooltip: {
-      theme: mode === 'dark' ? 'dark' : 'light',
-      style: {
-        fontSize: '12px',
-        background: mode === 'dark' ? '#111827' : '#ffffff',
-        color: mode === 'dark' ? '#e5e7eb' : '#111827',
-      },
-      y: {
-        formatter: (val) => `${val}`,
-      },
-    },
-    colors: getColorsByLabels(labels),
-    legend: {
-      show: false
-    },
-    grid: {
-      borderColor: '#eee'
-    },
+    xaxis: { categories: labels },
+    dataLabels: { enabled: true },
+    legend: { show: false },
+    states: { active: { filter: { type: "none" } } },
+    noData: { text: "No data yet" },
   };
 
-  const series = [{
-    name: 'Count',
-    data: data
-  }];
-
   return (
-    <Grid item lg={4} md={6} xs={12}>
-      <Card sx={{ p: 2, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-        <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
-          {title}
-        </Typography>
-        <Chart options={chartOptions} series={series} type="bar" />
-        {onViewMore && (
-          <Box sx={{ mt: 2, textAlign: 'right' }}>
-            <Typography
-              variant="body2"
-              component="span"
-              sx={{
-                color: 'primary.main',
-                cursor: 'pointer',
-                fontWeight: 500,
-                fontSize: '0.875rem',
-                '&:hover': { textDecoration: 'underline' }
-              }}
-              onClick={onViewMore}
-            >
-              View more →
-            </Typography>
+    <Grid item xs={12} md={6} lg={4}>
+      <Card sx={{ height: "100%", boxShadow: "2px 2px 8px rgba(0, 0, 0, 0.2)" }}>
+        <CardContent>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 1,
+            }}
+          >
+            <Typography variant="h6">{title}</Typography>
+            {onViewMore && (
+              <Button size="small" onClick={onViewMore}>
+                View more
+              </Button>
+            )}
           </Box>
-        )}
+
+          <Box
+            sx={{
+              "& .apexcharts-bar-area": {
+                cursor: onBarClick ? "pointer" : "default",
+              },
+            }}
+          >
+            <Chart
+              type="bar"
+              options={options}
+              series={[{ name: title || "Count", data }]}
+              height={height}
+            />
+          </Box>
+        </CardContent>
       </Card>
     </Grid>
   );
 };
 
-BarChartComponent.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.number),
-  labels: PropTypes.arrayOf(PropTypes.string),
-  title: PropTypes.string,
-  onViewMore: PropTypes.func,
-  onBarClick: PropTypes.func,
-  height: PropTypes.number,
-};
-
-export default BarChartComponent;
+export default BarChart;
