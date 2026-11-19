@@ -11,7 +11,6 @@ import {
   Dialog,
   DialogTitle,
   CardActions,
-  Grid,
   Alert,
   Chip,
 } from "@mui/material";
@@ -25,9 +24,8 @@ import {
 
 import CustomersFilters from "../components/CustomersFilters";
 import CustomersTable from "../components/CustomersTable";
-import { BASE_URL } from "../core/constants";
 import { AuthContext } from "../core/AuthContext";
-import CandidatesDashboardCard from "../components/CandidatesDashboardCard";
+import EditCandidateModal from "../components/EditCandidateModal";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -87,11 +85,15 @@ const Candidates = () => {
   const [recentCandidatesCount, setRecentCandidatesCount] = React.useState(0);
   const [importError, setImportError] = React.useState(null);
 
+  
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = React.useState(null);
+
   const getCandidates = async () => {
     try {
       const response = await fetch(`http://167.172.164.218/candidates/get1`);
       const result = await response.json();
-      const sortedData = result.data.sort(
+      const sortedData = (result.data || []).sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
 
@@ -104,7 +106,7 @@ const Candidates = () => {
       );
 
       setRecentCandidatesCount(recentCandidates.length);
-      setData(sortedData || []);
+      setData(sortedData);
     } catch (error) {
       console.error("Error fetching candidates:", error);
       setData([]);
@@ -205,6 +207,32 @@ const Candidates = () => {
   const importHandler = () => {
     setOpen(true);
   };
+
+ 
+  const handleEditCandidate = (candidateOrId) => {
+    const id =
+      typeof candidateOrId === "object" && candidateOrId !== null
+        ? candidateOrId._id
+        : candidateOrId;
+    if (!id) {
+      console.error("Edit clicked without a candidate id:", candidateOrId);
+      return;
+    }
+    setSelectedCandidateId(id);
+    setEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setSelectedCandidateId(null);
+  };
+
+  // Refresh the list and close the dialog after a successful save
+  const handleEditSuccess = async () => {
+    await getCandidates();
+    handleEditModalClose();
+  };
+
   const exportHandler = async () => {
     try {
       let exportData;
@@ -280,7 +308,7 @@ const Candidates = () => {
         body: JSON.stringify({
           userID: user._id,
           Activity: "export",
-          userName: currentUser.user.FirstName,
+          userName: currentUser?.user?.FirstName,
         }),
       });
 
@@ -462,8 +490,21 @@ const Candidates = () => {
           rowsPerPage={rowsPerPage}
           onPageChange={handlePageChange}
           onRowsPerPageChange={handleRowsPerPageChange}
+          onEditCandidate={handleEditCandidate}
         />
       </Stack>
+
+
+      {editModalOpen && selectedCandidateId && (
+        <EditCandidateModal
+          key={selectedCandidateId}
+          open={editModalOpen}
+          onClose={handleEditModalClose}
+          candidateId={selectedCandidateId}
+          onSuccess={handleEditSuccess}
+        />
+      )}
+
       <Box sx={{ padding: "20px" }}>
         <Dialog
           onClose={handleClose}
@@ -516,7 +557,6 @@ const Candidates = () => {
                   onClick={generateExcelSheet}
                 >
                   Download Template
-                  Submit
                 </Button>
               </CardActions>
               <CardActions>
