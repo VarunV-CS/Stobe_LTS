@@ -5,8 +5,7 @@ import PropTypes from 'prop-types';
 import { Grid, Card, Typography, Box } from '@mui/material';
 import { useTheme } from '../contexts/ThemeContext';
 
-const getColorsByLabels = (labels) => {
-    const colorMap = {
+const colorMap = {
       Amber: '#feb019',
       Green: '#05e395',
       Shortlisted: '#038ffb',
@@ -14,34 +13,13 @@ const getColorsByLabels = (labels) => {
       Unassigned: '#775dcf',
     };
 
+const predefinedColors = ['#038ffb', '#05e395', '#ff455f', '#775dcf', '#feb019'];
+
 const getColorsByLabels = (labels) =>
   labels.map((label, index) => {
     const key = String(label ?? '').trim();
-    return COLOR_MAP[key] || PREDEFINED_COLORS[index % PREDEFINED_COLORS.length];
+    return colorMap[key] || predefinedColors[index % predefinedColors.length];
   });
-
-/**
- * Props (same as the Dashboard already passes):
- *   data        number[]   values, one per bar
- *   labels      string[]   x-axis labels, one per bar
- *   title       string
- *   onViewMore  () => void
- *   onBarClick  (index: number) => void   index of the clicked bar
- */
-const BarChartComponent = ({
-  data = [],
-  labels = [],
-  title = 'Bar Chart',
-  onViewMore,
-  onBarClick,
-  height = 300,
-}) => {
-  const { mode } = useTheme();
-
-  // Always call the latest handler. react-apexcharts doesn't reliably
-  // re-bind chart events when only a callback prop changes.
-  const clickRef = React.useRef(onBarClick);
-  clickRef.current = onBarClick;
 
 /**
  * Props (same as the Dashboard already passes):
