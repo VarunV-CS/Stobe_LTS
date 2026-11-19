@@ -277,7 +277,7 @@ const Candidates = () => {
         "status",
         "updatedAt",
         "workingModel",
-        "alternateContactNo",
+        "alternateContactNo"
       ];
 
       // Convert data to an array format
@@ -291,6 +291,7 @@ const Candidates = () => {
             : value || "";
         })
       );
+      // console.log("++++++", dataForExport);
 
       // Create worksheet and workbook
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataForExport]);
