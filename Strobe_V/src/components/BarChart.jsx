@@ -14,15 +14,34 @@ const getColorsByLabels = (labels) => {
       Unassigned: '#775dcf',
     };
 
-    const predefinedColors = ['#038ffb', '#05e395', '#ff455f', '#775dcf', '#feb019'];
+const getColorsByLabels = (labels) =>
+  labels.map((label, index) => {
+    const key = String(label ?? '').trim();
+    return COLOR_MAP[key] || PREDEFINED_COLORS[index % PREDEFINED_COLORS.length];
+  });
 
-    const mappedColors = labels.map((label, index) => {
-      const key = label.trim();
-      return colorMap[key] || predefinedColors[index % predefinedColors.length];
-    });
+/**
+ * Props (same as the Dashboard already passes):
+ *   data        number[]   values, one per bar
+ *   labels      string[]   x-axis labels, one per bar
+ *   title       string
+ *   onViewMore  () => void
+ *   onBarClick  (index: number) => void   index of the clicked bar
+ */
+const BarChartComponent = ({
+  data = [],
+  labels = [],
+  title = 'Bar Chart',
+  onViewMore,
+  onBarClick,
+  height = 300,
+}) => {
+  const { mode } = useTheme();
 
-    return mappedColors;
-  };
+  // Always call the latest handler. react-apexcharts doesn't reliably
+  // re-bind chart events when only a callback prop changes.
+  const clickRef = React.useRef(onBarClick);
+  clickRef.current = onBarClick;
 
 /**
  * Props (same as the Dashboard already passes):
@@ -59,16 +78,19 @@ const BarChartComponent = ({
         export: {
           png: { filename: `${title || 'chart'}` },
           svg: { filename: `${title || 'chart'}` },
-          csv: { filename: `${title || 'chart'}` }
-        }
+          csv: { filename: `${title || 'chart'}` },
+        },
       },
       events: {
-        dataPointSelection: (event, chartContext, config) => {
-          if (!onBarClick) return;
-          const dataPointIndex = config?.dataPointIndex;
-          if (typeof dataPointIndex !== 'number') return;
-          const selectedLabel = labels[dataPointIndex];
-          if (selectedLabel) onBarClick(selectedLabel);
+        // For bar charts `click` is the reliable event: it carries the
+        // dataPointIndex of the bar under the cursor (dataPointSelection
+        // often doesn't fire on bars with the default shared tooltip).
+        click: (event, _chartContext, config) => {
+          // Ignore clicks on the toolbar and its download menu, so choosing
+          // PNG / SVG / CSV never counts as a bar click.
+          if (event?.target?.closest?.('.apexcharts-toolbar, .apexcharts-menu')) return;
+          const i = config?.dataPointIndex;
+          if (typeof i === 'number' && i >= 0) clickRef.current?.(i);
         },
       },
     },
@@ -77,16 +99,16 @@ const BarChartComponent = ({
         horizontal: false,
         columnWidth: '55%',
         borderRadius: 4,
-        distributed: true
-      }
+        distributed: true,
+      },
     },
     dataLabels: {
-      enabled: false
+      enabled: false,
     },
     stroke: {
       show: true,
       width: 2,
-      colors: ['transparent']
+      colors: ['transparent'],
     },
     xaxis: {
       categories: labels,
@@ -134,17 +156,22 @@ const BarChartComponent = ({
     },
     colors: getColorsByLabels(labels),
     legend: {
-      show: false
+      show: false,
     },
     grid: {
-      borderColor: '#eee'
+      borderColor: '#eee',
     },
+    // Don't darken a bar after it's clicked; we navigate instead
+    states: { active: { filter: { type: 'none' } } },
+    noData: { text: 'No data yet' },
   };
 
-  const series = [{
-    name: 'Count',
-    data: data
-  }];
+  const series = [
+    {
+      name: 'Count',
+      data: data,
+    },
+  ];
 
   return (
     <Grid item lg={4} md={6} xs={12}>
@@ -152,7 +179,17 @@ const BarChartComponent = ({
         <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
           {title}
         </Typography>
-        <Chart options={chartOptions} series={series} type="bar" />
+
+        <Box
+          sx={{
+            '& .apexcharts-bar-area': {
+              cursor: onBarClick ? 'pointer' : 'default',
+            },
+          }}
+        >
+          <Chart options={chartOptions} series={series} type="bar" />
+        </Box>
+
         {onViewMore && (
           <Box sx={{ mt: 2, textAlign: 'right' }}>
             <Typography
@@ -163,7 +200,7 @@ const BarChartComponent = ({
                 cursor: 'pointer',
                 fontWeight: 500,
                 fontSize: '0.875rem',
-                '&:hover': { textDecoration: 'underline' }
+                '&:hover': { textDecoration: 'underline' },
               }}
               onClick={onViewMore}
             >
