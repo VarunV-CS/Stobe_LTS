@@ -205,18 +205,16 @@ const Candidates = () => {
         "internalRAG",
         "interviewer",
         "lastComms",
-    
         "noticePeriod",
         "paymentType",
         "relocate",
         "resume",
         "screenedBy",
         "screeningOutcome",
-         "status",
+        "status",
         "updatedAt",
         "workingModel",
         "alternateContactNo"
-        
       ];
 
       // Convert data to an array format
@@ -230,7 +228,7 @@ const Candidates = () => {
             : value || "";
         })
       );
-      console.log("++++++", dataForExport);
+      // console.log("++++++", dataForExport);
 
       // Create worksheet and workbook
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataForExport]);
@@ -482,7 +480,6 @@ const Candidates = () => {
                   onClick={generateExcelSheet}
                 >
                   Download Template
-                  Submit
                 </Button>
               </CardActions>
               <CardActions>

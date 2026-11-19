@@ -1,13 +1,11 @@
+import React from 'react';
 import Chart from 'react-apexcharts';
 import PropTypes from 'prop-types';
 
 import { Grid, Card, Typography, Box } from '@mui/material';
 import { useTheme } from '../contexts/ThemeContext';
 
-const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onViewMore, onBarClick, height = 300 }) => {
-  const { mode } = useTheme();
-
-  const getColorsByLabels = (labels) => {
+const getColorsByLabels = (labels) => {
     const colorMap = {
       Amber: '#feb019',
       Green: '#05e395',
@@ -26,6 +24,29 @@ const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onView
     return mappedColors;
   };
 
+/**
+ * Props (same as the Dashboard already passes):
+ *   data        number[]   values, one per bar
+ *   labels      string[]   x-axis labels, one per bar
+ *   title       string
+ *   onViewMore  () => void
+ *   onBarClick  (index: number) => void   index of the clicked bar
+ */
+const BarChartComponent = ({ 
+  data = [], 
+  labels = [], 
+  title = 'Bar Chart', 
+  onViewMore, 
+  onBarClick, 
+  height = 300 
+}) => {
+  const { mode } = useTheme();
+
+  // Always call the latest handler. react-apexcharts doesn't reliably
+  // re-bind chart events when only a callback prop changes.
+  const clickRef = React.useRef(onBarClick);
+  clickRef.current = onBarClick;
+
   const axisLabelColor = mode === 'dark' ? '#e5e7eb' : '#111827';
   const gridBorderColor = mode === 'dark' ? 'rgba(229, 231, 235, 0.15)' : '#e5e7eb';
 
@@ -33,7 +54,7 @@ const BarChartComponent = ({ data = [], labels = [], title = 'Bar Chart', onView
     chart: {
       type: 'bar',
       height: height,
-      toolbar: { 
+      toolbar: {
         show: true,
         export: {
           png: { filename: `${title || 'chart'}` },
@@ -160,7 +181,7 @@ BarChartComponent.propTypes = {
   labels: PropTypes.arrayOf(PropTypes.string),
   title: PropTypes.string,
   onViewMore: PropTypes.func,
-  onBarClick: PropTypes.func,
+  onBarClick: PropTypes.func, // receives the index of the clicked bar
   height: PropTypes.number,
 };
 
